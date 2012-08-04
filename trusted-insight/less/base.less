@@ -1,0 +1,385 @@
+/* 
+* Dirty Bastard V1.0
+*
+* Skeleton (getskeleton.com), Real HTML5 Boilerplate (csswizadry.com), Less-CSS (lesscss.org)
+* Mashed up by Orry Baram
+*
+*/
+ 
+/* Reset
+==================================================
+*/
+
+	html,body,div,span,applet,object,iframe,
+	h1,h2,h3,h4,h5,h6,p,blockquote,pre,
+	a,abbr,acronym,address,big,cite,code,
+	del,dfn,em,img,ins,kbd,q,s,samp,
+	small,strike,strong,sub,sup,tt,var,
+	b,u,i,center,
+	dl,dt,dd,ol,ul,li,
+	fieldset,form,label,legend,
+	table,caption,tbody,tfoot,thead,tr,th,td,
+	article,aside,canvas,details,figcaption,figure,
+	footer,header,hgroup,menu,nav,section,summary,
+	time,mark,audio,video{
+	  margin:0;
+	  padding:0;
+	  border:0;
+	  outline:0;
+	  font-size:100%;
+	  font:inherit;
+	  vertical-align:baseline;
+	}
+	/* HTML5 display-role reset for older browsers */
+	article,aside,details,figcaption,figure,
+	footer,header,hgroup,menu,nav,section{
+	  display:block;
+	}
+	body{
+	  line-height:1;
+	}
+	ol,ul{
+	  list-style:none;
+	}
+	blockquote,q{
+	  quotes:none;
+	}
+	blockquote:before,blockquote:after,
+	q:before,q:after{
+	  content:'';
+	  content:none;
+	}
+	/* remember to define visible focus styles!
+	:focus{
+	  outline:?????;
+	} */
+
+	/* remember to highlight inserts somehow! */
+	ins{
+	  text-decoration:none;
+	}
+	del{
+	  text-decoration:line-through;
+	}
+
+	table{
+	  border-collapse:collapse;
+	  border-spacing:0;
+	}
+	em {
+		font-style:italic;
+	}
+
+/* Blue Buttons
+==================================================
+*/
+	@top-gradient-blue: rgba(74,121,255, 1) 0%;
+	@bottom-gradient-blue: rgba(55,108,255, 1) 100%;
+	@top-gradient-hover-blue: rgba(74,121,255, .9) 0%;
+	@bottom-gradient-hover-blue: rgba(55,108,255,.9) 100%;
+	@top-gradient-active-blue: rgba(74,121,255, .8) 0%;
+	@bottom-gradient-active-blue: rgba(55,108,255,.8) 100%;
+	
+	button img.add {
+		height: 13px;
+		margin-right: 5px;
+		float: left;
+		margin-top: 3px;
+	}
+	 
+	a.button.blue, 
+	button.blue {
+		background: #376CFF; /* Old browsers */
+		background: -moz-linear-gradient(top, @top-gradient-blue, @bottom-gradient-blue); /* FF3.6+ */
+		background: -webkit-linear-gradient(top, @top-gradient-blue,@bottom-gradient-blue); /* Chrome10+,Safari5.1+ */
+		background: -o-linear-gradient(top, @top-gradient-blue,@bottom-gradient-blue); /* Opera11.10+ */
+		background: -ms-linear-gradient(top, @top-gradient-blue,@bottom-gradient-blue); /* IE10+ */
+		background: linear-gradient(top, @top-gradient-blue,@bottom-gradient-blue); /* W3C */
+	  border: 1px solid #0e67a4;
+	  border-top: 1px solid #0e67a4;
+	  border-left: 1px solid #0e67a4;
+	  padding: 4px 12px;
+	  -moz-border-radius: 3px;
+	  -webkit-border-radius: 3px;
+	  border-radius: 3px;
+	  color: #EEE;
+	  display: inline-block;
+	  font-size: 11px;
+	  font-weight: bold;
+	  text-decoration: none;
+	  text-shadow: 0 1px #666;
+	  cursor: pointer;
+	  line-height: 21px;
+	  font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+	   
+	a.button.blue:hover, 
+	button.blue:hover { 
+		color: #EEE;
+		background: #4A79FF; /* Old browsers */
+		background: -moz-linear-gradient(top, @top-gradient-hover-blue, @bottom-gradient-hover-blue); /* FF3.6+ */
+		background: -webkit-linear-gradient(top, @top-gradient-hover-blue,@bottom-gradient-hover-blue); /* Chrome10+,Safari5.1+ */
+		background: -o-linear-gradient(top, @top-gradient-hover-blue,@bottom-gradient-hover-blue); /* Opera11.10+ */
+		background: -ms-linear-gradient(top, @top-gradient-hover-blue,@bottom-gradient-hover-blue); /* IE10+ */
+		background: linear-gradient(top, @top-gradient-hover-blue,@bottom-gradient-hover-blue); /* W3C */
+	  border: 1px solid #0e67a4;
+	  border-top: 1px solid #0e67a4;
+	  border-left: 1px solid #0e67a4; }
+	  
+  a.button.blue:active, 
+  button.blue:active {
+    background: #0E67A4; /* Old browsers */
+    background: -moz-linear-gradient(top, @top-gradient-active-blue, @bottom-gradient-active-blue); /* FF3.6+ */
+    background: -webkit-linear-gradient(top, @top-gradient-active-blue,@bottom-gradient-active-blue); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top, @top-gradient-active-blue,@bottom-gradient-active-blue); /* Opera11.10+ */
+    background: -ms-linear-gradient(top, @top-gradient-active-blue,@bottom-gradient-active-blue); /* IE10+ */
+    background: linear-gradient(top, @top-gradient-active-blue,@bottom-gradient-active-blue); /* W3C */
+    border: 1px solid #0e67a4;
+    border-bottom: 1px solid #0e67a4;
+    border-right: 1px solid #0e67a4; }
+	
+	.button.full-width { 
+		width: 100%;
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+		text-align: center; }
+	
+/* Regular Buttons
+==================================================
+*/
+
+	@top-gradient: rgba(255,255,255,.1) 0%;
+	@bottom-gradient: rgba(0,0,0,.1) 100%;
+	@top-gradient-hover: rgba(255,255,255,.2) 0%;
+	@bottom-gradient-hover: rgba(0,0,0,.2) 100%;
+	@top-gradient-active: rgba(0,0,0,.0) 0%;
+	@bottom-gradient-active: rgba(255,255,255,.0) 100%;
+	
+	a.button.grey, 
+	button.grey {
+		background: #eee; /* Old browsers */
+		background: -moz-linear-gradient(top, @top-gradient, @bottom-gradient); /* FF3.6+ */
+		background: -webkit-linear-gradient(top, @top-gradient,@bottom-gradient); /* Chrome10+,Safari5.1+ */
+		background: -o-linear-gradient(top, @top-gradient,@bottom-gradient); /* Opera11.10+ */
+		background: -ms-linear-gradient(top, @top-gradient,@bottom-gradient); /* IE10+ */
+		background: linear-gradient(top, @top-gradient,@bottom-gradient); /* W3C */
+	  border: 1px solid #aaa;
+	  border-top: 1px solid #ccc;
+	  border-left: 1px solid #ccc;
+	  padding: 4px 12px;
+	  -moz-border-radius: 3px;
+	  -webkit-border-radius: 3px;
+	  border-radius: 3px;
+	  color: #444;
+	  display: inline-block;
+	  font-size: 11px;
+	  font-weight: bold;
+	  text-decoration: none;
+	  text-shadow: 0 1px rgba(255, 255, 255, .75);
+	  cursor: pointer;
+	  line-height: 21px;
+	  font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+	  
+	a.button.grey:hover, 
+	button.grey:hover {
+		color: #222;
+		background: #eee; /* Old browsers */
+		background: -moz-linear-gradient(top, @top-gradient-hover, @bottom-gradient-hover); /* FF3.6+ */
+		background: -webkit-linear-gradient(top, @top-gradient-hover,@bottom-gradient-hover); /* Chrome10+,Safari5.1+ */
+		background: -o-linear-gradient(top, @top-gradient-hover,@bottom-gradient-hover); /* Opera11.10+ */
+		background: -ms-linear-gradient(top, @top-gradient-hover,@bottom-gradient-hover); /* IE10+ */
+		background: linear-gradient(top, @top-gradient-hover,@bottom-gradient-hover); /* W3C */
+	  border: 1px solid #888;
+	  border-top: 1px solid #aaa;
+	  border-left: 1px solid #aaa; }
+	  
+  a.button.grey:active, 
+  button.grey:active {
+    background: #eee; /* Old browsers */
+   	background: -moz-linear-gradient(top, @top-gradient-active, @bottom-gradient-active); /* FF3.6+ */
+    background: -webkit-linear-gradient(top, @top-gradient-active,@bottom-gradient-active); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top, @top-gradient-active,@bottom-gradient-active); /* Opera11.10+ */
+    background: -ms-linear-gradient(top, @top-gradient-active,@bottom-gradient-active); /* IE10+ */
+    background: linear-gradient(top, @top-gradient-active,@bottom-gradient-active); /* W3C */
+    border: 1px solid #888;
+    border-bottom: 1px solid #aaa;
+    border-right: 1px solid #aaa; }
+	
+	.button.full-width { 
+		width: 100%;
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+		text-align: center; }	
+
+
+button.inactive {
+		background: #eee; /* Old browsers */
+		background: -moz-linear-gradient(top, @top-gradient, @bottom-gradient); /* FF3.6+ */
+		background: -webkit-linear-gradient(top, @top-gradient,@bottom-gradient); /* Chrome10+,Safari5.1+ */
+		background: -o-linear-gradient(top, @top-gradient,@bottom-gradient); /* Opera11.10+ */
+		background: -ms-linear-gradient(top, @top-gradient,@bottom-gradient); /* IE10+ */
+		background: linear-gradient(top, @top-gradient,@bottom-gradient); /* W3C */
+	  border: 1px solid #aaa;
+	  border-top: 1px solid #ccc;
+	  border-left: 1px solid #ccc;
+	  padding: 4px 12px;
+	  -moz-border-radius: 3px;
+	  -webkit-border-radius: 3px;
+	  border-radius: 3px;
+	  color: #808080;
+	  display: inline-block;
+	  font-size: 11px;
+	  font-weight: bold;
+	  text-decoration: none;
+	  text-shadow: 0 1px rgba(255, 255, 255, .75);
+	  cursor: default;
+	  line-height: 21px;
+	  font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif; 
+}			
+			
+/* Forms
+==================================================
+*/
+
+	input[type="text"], 
+	input[type="password"],
+	input[type="email"],
+	textarea, 
+	select {
+		border: 1px solid #ccc;
+		padding: 6px 4px;
+		outline: none;
+		-moz-border-radius: 3px;
+		-webkit-border-radius: 3px;
+		border-radius: 3px;
+		font: 13px "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+		color: #777;
+		margin: 0;
+		display: block;
+		background: #fff; }
+	select { 
+		padding: 0; }
+	input[type="text"]:focus,
+	input[type="password"]:focus,
+	input[type="email"]:focus, 
+	textarea:focus {
+		border: 1px solid #aaa;
+ 		color: #444;
+ 		-moz-box-shadow: 0 0 3px rgba(0,0,0,.2);
+		-webkit-box-shadow: 0 0 3px rgba(0,0,0,.2);
+		box-shadow:  0 0 3px rgba(0,0,0,.2); }
+	textarea {
+		min-height: 60px; }
+	label { 
+		display: block;
+		font-weight: bold;
+		font-size: 13px;  }
+	select { 
+		width: 220px; }
+	input[type="checkbox"] {
+		display: inline; }
+	label span {
+		font-weight: normal;
+		font-size: 13px;
+		color: #444; }
+
+/* #Tabs 
+================================================== */
+	ul.tabs { 
+		display: block;
+		margin: 0 0 10px 0;
+		padding: 0;
+		border-bottom: solid 1px #ddd; }
+	ul.tabs li { 
+		display: block;
+		width: auto;
+		height: 30px;
+		padding: 0;
+		float: left;
+		margin-bottom: 0; }
+	ul.tabs li a { 
+		display: block; 
+		text-decoration: none;
+		width: auto; 
+		height: 29px; 
+		padding: 0px 20px; 
+		line-height: 30px; 
+		border: solid 1px #ddd;
+		border-width: 1px 0 0 1px; 
+		margin: 0;  
+		background: #f5f5f5;
+		font-size: 13px; }
+	ul.tabs li a.active { 
+		background: #fff; 
+		height: 30px;
+		position: relative;
+		top: -4px;
+		padding-top: 4px;
+		border-right-width: 1px;
+		margin: 0 -1px 0 0;
+		color: #111;
+		-moz-border-radius-topleft: 2px;
+		-webkit-border-top-left-radius: 2px;
+		border-top-left-radius: 2px;
+		-moz-border-radius-topright: 2px;
+		-webkit-border-top-right-radius: 2px;
+		border-top-right-radius: 2px; }
+	ul.tabs li:first-child a {
+		-moz-border-radius-topleft: 2px;
+		-webkit-border-top-left-radius: 2px;
+		border-top-left-radius: 2px; }
+	ul.tabs li:last-child a {
+		border-width: 1px 1px 0 1px;
+		-moz-border-radius-topright: 2px;
+		-webkit-border-top-right-radius: 2px;
+		border-top-right-radius: 2px; }
+	
+	ul.tabs-content { margin: 0; display: block; }
+	ul.tabs-content > li { display:none; }
+	ul.tabs-content > li.active { display: block; }
+		
+	/* Clearfixing tabs for beautiful stacking */
+	ul.tabs:before,
+	ul.tabs:after {
+	  content: '\0020';
+	  display: block;
+	  overflow: hidden;
+	  visibility: hidden;
+	  width: 0;
+	  height: 0; }
+	ul.tabs:after {
+	  clear: both; }
+	ul.tabs {
+	  zoom: 1; }
+
+
+/* #Media Queries
+================================================== */
+	
+	/* iPad Portrait/Browser */
+	@media only screen and (min-width: 768px) and (max-width: 991px) {}
+	
+	/* Mobile/Browser */
+	@media only screen and (max-width: 767px) {}
+	
+	/* Mobile Landscape/Browser */
+	@media only screen and (min-width: 480px) and (max-width: 767px) {}
+	
+	/* Anything smaller than standard 960 */
+	@media only screen and (max-width: 959px) {}
+	
+	/* iPad Portrait Only */
+	@media only screen and (min-width: 768px) and (max-width: 991px) and (max-device-width: 1000px) {}
+	
+	/* Mobile Only */
+	@media only screen and (max-width: 767px) and (max-device-width: 1000px) {}
+	
+	/* Mobile Landscape Only */
+	@media only screen and (min-width: 480px) and (max-width: 767px) and (max-device-width: 1000px) {}
+	
+/* #Misc
+================================================== */
+	.remove-bottom { margin-bottom: 0 !important; }
+	.add-bottom { margin-bottom: 20px !important; }
+
+		
+	
