@@ -1226,6 +1226,9 @@ legend + .control-group {
 .invisible {
   visibility: hidden;
 }
+.full-height {
+  height: 100%;
+}
 /* Based on Sublime Text's Monokai theme */
 .cm-s-monokai {
   background: #272822;

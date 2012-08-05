@@ -1,3 +1,6 @@
+html {
+  height: 100%;
+}
 body {
   font-family: sans-serif;
   overflow: hidden;
@@ -12,12 +15,13 @@ textarea {
   box-shadow: 0 1px #807F7F;
   background: #3B3D38;
 }
-.container {
+.code-side {
   background: #3F3F3F;
   border-right: 1px solid #181818;
   background-image: url('../images/noise.png');
+  height: 100%;
 }
-.container h2 {
+.code-side h2 {
   color: #303030;
   text-shadow: 0 -1px #666464;
   font-family: 'Pacifico', cursive;
@@ -26,10 +30,10 @@ textarea {
 .grid {
   height: 100%;
   overflow: auto;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
   padding: 20px 30px;
+}
+.grid.code-side {
+  padding-bottom: 80px;
 }
 .output {
   border-left: 1px solid #fff;
