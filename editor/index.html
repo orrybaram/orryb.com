@@ -2,15 +2,12 @@
 <html>
 <head>
 	<title>Orry Baram: Front End Development</title>
-	<link rel="stylesheet" href="css/style.css">
-	<link rel="stylesheet" href="css/monokai.css">
-	<script src="js/codemirror.js"></script>
+	
 	<link rel="stylesheet" href="css/codemirror.css">
-	<script src="js/htmlmixed.js"></script>
-	<script src="js/css.js"></script>
-	<script src="js/javascript.js"></script>
-	<script src="js/xml.js"></script>
+	<link rel="stylesheet" href="css/monokai.css">
+	<link rel="stylesheet" href="css/style.css">
 	<link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+
 </head>
 <body>
 
@@ -22,10 +19,10 @@
 <h2>My name is Orry and I'm a front end developer.</h2>
 <h3>I'm currently living in Brooklyn and working at <a target="_blank" href="http://thetrustedinsight.com">TrustedInsight</a>.</h3>
 <h3>Previous Projects:</h3>
-	<ul>
-		<li><a target="_blank" href="http://safeisfast.com">Safe is Fast</a> -- Front end Development and Design</li>
-		<li><a target="_blank" href="http://www.bergfurniture.com">Berg Furniture</a> -- Development and Design (no longer maintained)</li> 
- 	</ul>	
+<ul>
+	<li><a target="_blank" href="http://safeisfast.com">Safe is Fast</a> -- Front end Development and Design</li>
+	<li><a target="_blank" href="http://www.bergfurniture.com">Berg Furniture</a> -- Development and Design (no longer maintained)</li> 
+</ul>	
 
  			</textarea>
  		</div>
@@ -55,6 +52,12 @@
 
 <script src="livereload.js"></script>
 
+<script src="js/codemirror.js"></script>
+<script src="js/css.js"></script>
+<script src="js/htmlmixed.js"></script>
+<script src="js/javascript.js"></script>
+<script src="js/xml.js"></script>
+
 <script>
 (function() {
 	//$('.grid').height( $(window).height() );	
@@ -82,13 +85,24 @@
 
 
 
-	var editor = CodeMirror.fromTextArea(document.getElementById("html"), {
+	var htmlEditor = CodeMirror.fromTextArea(document.getElementById("html"), {
 		mode: "text/html", 
 		tabMode: "indent",
 		theme: "monokai",
+		lineWrapping: true,
 		onChange: function() {
-			//console.log(editor.getValue());
-			body.html( editor.getValue() );
+			body.html( htmlEditor.getValue() );
+		}
+	});
+
+	var cssEditor = CodeMirror.fromTextArea(document.getElementById("css"), {
+		mode: "text/css", 
+		tabMode: "indent",
+		theme: "monokai",
+		lineWrapping: true,
+		onChange: function() {
+			console.log(cssEditor.getValue());
+			styleTag.text( cssEditor.getValue() );
 		}
 	});
 
