@@ -5,14 +5,8 @@
 
 body {
   font-family: sans-serif;
-}
-
-.pane {
-  overflow: auto;
-}
-
-.wrapper {
-  width:100%;
+  overflow: hidden;
+  height:100%;
 }
 
 textarea {
@@ -26,10 +20,9 @@ textarea {
 }
 
 .container {
-  background: #545750;
-  border-right: 1px solid #494646;
+  background: #3F3F3F;
+  border-right: 1px solid #181818;
   background-image: url('../images/noise.png');
-  box-shadow: inset -25px 0 150px 0px rgba(7, 7, 7, 0.4);
 }
 
 .container h2 {
@@ -45,7 +38,6 @@ textarea {
   float: left;
   overflow: auto;
 
-
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
@@ -55,6 +47,7 @@ textarea {
 .output {
   border-left: 1px solid #fff;
   padding:0px 0 20px 0;
+  overflow: hidden;
 }
 
 .output iframe {
@@ -74,54 +67,15 @@ textarea {
   background: #252524;
 }
 
-#version {
-  position: fixed;
-  bottom:0;
-  right:0;
-  background-color: rgba(0, 0, 0, 0.8);
-  padding: 4px 10px;
+#header {
+  background-color: #252525;
+  padding: 3px 10px;
   color: white;
-  border-radius: 3px 0 0 0;
   font-size: 10px;
+  text-align: right;
+  border-bottom: 1px solid #4E4E4E;
 }
 
-.jspVerticalBar {
-  width:8px;
-}
-
-.jspTrack {
-  background: #323235;
-  width:8px;
-}
-
-.jspDrag {
-  background: #525252;
-  position: relative;
-  top: 0;
-  left: 2px;
-  cursor: pointer;
-  border-radius: 10px/20px;
-  border: 1px solid #2C2C2C;
-  width: 5px;
-}
-
-.vsplitbar {
-  width: 5px;
-  background: #aaa;
-}
-
-#MySplitter {
-  height: 200px;
-  width: 500px;
-  border: 5px solid #aaa;
-}
-#MySplitter div {
-  overflow: auto;
-}
-.vsplitbar {
-  width: 5px;
-  background: #aaa;
-}
 ::-webkit-scrollbar {
     width: 8px;
 }
