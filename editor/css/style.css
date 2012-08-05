@@ -7,6 +7,14 @@ body {
   font-family: sans-serif;
 }
 
+.pane {
+  overflow: auto;
+}
+
+.wrapper {
+  width:100%;
+}
+
 textarea {
   width: 100%;
   margin: 0 auto 50px;
@@ -46,7 +54,6 @@ textarea {
 
 .output {
   border-left: 1px solid #fff;
-  overflow: hidden;
   padding:0px 0 20px 0;
 }
 
@@ -98,6 +105,23 @@ textarea {
   width: 5px;
 }
 
+.vsplitbar {
+  width: 5px;
+  background: #aaa;
+}
+
+#MySplitter {
+  height: 200px;
+  width: 500px;
+  border: 5px solid #aaa;
+}
+#MySplitter div {
+  overflow: auto;
+}
+.vsplitbar {
+  width: 5px;
+  background: #aaa;
+}
 ::-webkit-scrollbar {
     width: 8px;
 }
