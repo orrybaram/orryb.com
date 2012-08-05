@@ -10,21 +10,23 @@
 
 </head>
 <body>
-
+<div id="version">v1.0</div>
 <div class="container grid">
 	<form>
 		<div class="input-area">
 			<h2>html</h2>
-			<textarea id="html"><h1>Hello!</h1>
+			<textarea id="html"><head>
+	<link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+</head>
+<h1>Hello!</h1>
 <h2>My name is Orry and I'm a front end developer.</h2>
 <h3>I'm currently living in Brooklyn and working at <a target="_blank" href="http://thetrustedinsight.com">TrustedInsight</a>.</h3>
 <h3>Previous Projects:</h3>
 <ul>
 	<li><a target="_blank" href="http://safeisfast.com">Safe is Fast</a> -- Front end Development and Design</li>
-	<li><a target="_blank" href="http://www.bergfurniture.com">Berg Furniture</a> -- Development and Design (no longer maintained)</li> 
+	<li><a target="_blank" href="http://www.bergfurniture.com">Berg Furniture</a> -- Development and Design <span class="label warning">no longer maintained</span></li> 
 </ul></textarea>	
 
- 			
  		</div>
  		
  		<div class="input-area">
@@ -37,7 +39,39 @@
 	background-color: #F1F1F1;
 	color: #43473D;
 	text-shadow: 0 1px white;
-}</textarea>
+}
+
+h1 {
+	font-size: 80px;
+  	margin-bottom: 0;
+}
+
+ul {
+	list-style:none;
+}
+
+#edit-it-dude {
+	font-family: Pacifico;
+  	position: fixed;
+  	bottom: 0;
+}
+
+.label {
+	font-size: 10px;
+	color: #D6D1D1;
+	background-color: #302F2F;
+	padding: 1px 3px;
+	border-radius: 3px;
+	text-shadow: none;
+	position: relative;
+	top: -1px;
+}
+
+.label.warning {
+	background-color:yellow;
+	color:black;
+}
+</textarea>
 
 			
 		</div>
@@ -60,7 +94,9 @@
 
 <script>
 (function() {
-	//$('.grid').height( $(window).height() );	
+	function setHeight(){ $('.grid').height( $(window).height() ); }; 	
+
+	window.onChange = setHeight();
 
 	var	contents = $('iframe').contents(),
 		body = contents.find('body'),
@@ -101,11 +137,10 @@
 		theme: "monokai",
 		lineWrapping: true,
 		onChange: function() {
-			console.log(cssEditor.getValue());
 			styleTag.text( cssEditor.getValue() );
 		}
 	});
-	
+
 })();
 
 </script>
