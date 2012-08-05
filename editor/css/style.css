@@ -20,7 +20,7 @@ textarea {
 .container {
   background: #545750;
   border-right: 1px solid #494646;
-  background-image: url('images/noise.png');
+  background-image: url('../images/noise.png');
 }
 
 .container h2 {
