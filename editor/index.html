@@ -28,7 +28,11 @@
 <ul>
 	<li><a target="_blank" href="http://safeisfast.com">Safe is Fast</a> -- Front end Development and Design</li>
 	<li><a target="_blank" href="http://www.bergfurniture.com">Berg Furniture</a> -- Development and Design <span class="label warning">no longer maintained</span></li> 
-</ul></textarea>	
+</ul>
+<div id="yeehaw">
+	<div id="come-on-do-it-already">edit me</div>
+	<div id="im-right-here">&#10550;</div>
+</div></textarea>	
 
  		</div>
  		
@@ -47,16 +51,15 @@
 h1 {
 	font-size: 80px;
   	margin-bottom: 0;
+  	font-family: 'Pacifico'
+}
+
+h2 {
+	margin: 0;
 }
 
 ul {
 	list-style:none;
-}
-
-#edit-it-dude {
-	font-family: Pacifico;
-  	position: fixed;
-  	bottom: 0;
 }
 
 .label {
@@ -73,6 +76,27 @@ ul {
 .label.warning {
 	background-color:#ECFF12;
 	color:black;
+}
+#yeehaw {
+	position:relative;
+  	left:50px;
+  	width:200px;
+}
+#come-on-do-it-already {
+	text-align: center;
+	margin-top: 50px;
+	color: #E6E6E6;
+	font-size: 50px;
+	text-shadow: 0 1px #D6D6D6;
+	font-family: 'Pacifico'
+}
+
+#im-right-here {
+	text-align: center;
+  	color: #E6E6E6;
+  	font-size: 130px;
+    position:relative;
+  	left:-50px;
 }
 </textarea>
 
@@ -117,7 +141,6 @@ ul {
 		mode: "text/html", 
 		tabMode: "indent",
 		theme: "monokai",
-		lineWrapping: true,
 		onChange: function() {
 			body.html( htmlEditor.getValue() );
 		}
@@ -127,7 +150,6 @@ ul {
 		mode: "text/css", 
 		tabMode: "indent",
 		theme: "monokai",
-		lineWrapping: true,
 		onChange: function() {
 			styleTag.text( cssEditor.getValue() );
 		}
