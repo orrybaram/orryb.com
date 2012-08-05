@@ -5,7 +5,10 @@
 	
 	<link rel="stylesheet" href="css/codemirror.css">
 	<link rel="stylesheet" href="css/monokai.css">
+	<link rel="stylesheet" href="css/jscrollpane.css">
+
 	<link rel="stylesheet" href="css/style.css">
+	
 	<link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
 
 </head>
@@ -68,7 +71,7 @@ ul {
 }
 
 .label.warning {
-	background-color:yellow;
+	background-color:#ECFF12;
 	color:black;
 }
 </textarea>
@@ -86,6 +89,8 @@ ul {
 
 <script src="js/livereload.js"></script>
 
+<script src="js/plugins.js"></script>
+
 <script src="js/codemirror.js"></script>
 <script src="js/css.js"></script>
 <script src="js/htmlmixed.js"></script>
@@ -94,8 +99,9 @@ ul {
 
 <script>
 (function() {
+	
+	//Set Grid Height to window size
 	function setHeight(){ $('.grid').height( $(window).height() ); }; 	
-
 	window.onChange = setHeight();
 
 	var	contents = $('iframe').contents(),
@@ -106,20 +112,6 @@ ul {
 
 	body.html(initial_html);
 	styleTag.text(initial_css);
-
-	$('textarea').keyup(function() {
-		var $this = $(this);
-		if ( $this.attr('id') === 'html') {
-			body.html( $this.val() );
-			console.log($this.val());
-
-		} else {
-			// it had to be css
-			styleTag.text( $this.val() );
-		}
-	});
-
-
 
 	var htmlEditor = CodeMirror.fromTextArea(document.getElementById("html"), {
 		mode: "text/html", 
@@ -140,6 +132,14 @@ ul {
 			styleTag.text( cssEditor.getValue() );
 		}
 	});
+
+	//Custom Scrollbars
+
+	var pane = $('.CodeMirror > div');
+	pane.jScrollPane();
+	var api = pane.data('jsp');
+
+	cssEditor.onChange(console.log("fuck"));
 
 })();
 
