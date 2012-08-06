@@ -191,7 +191,9 @@ ul {
 		
 	},function(){
 		code.animate({width: 'show'});
-		output.animate({ width: ($('.row-fluid').width() * .5) });
+		output.animate({ width: ($('.row-fluid').width() * .5) }, function(){
+			output.css("width", '50%');
+		});
 	});
 
 })();
