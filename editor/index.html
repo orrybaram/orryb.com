@@ -25,25 +25,39 @@
 
 </head>
 <body>
-<div id="header">v1.0</div>
+<div id="header">v1.1 <a id="toggle-code" href="#">hide code</a></div>
 <div class="row-fluid full-height">
 	<div class="span6 code-side grid">
 		<form>
 			<div class="input-area"> 
-				<h2>html <i class="icon-bullhorn"></i></h2>
-				<textarea id="html"><h1>Hello!</h1>
-<h2>My name is Orry and I'm a front end developer.</h2> 
-<h3>I'm currently living in Brooklyn and working at <a target="_blank" href="http://thetrustedinsight.com">TrustedInsight</a>.</h3>
-<h3>Previous Projects:</h3>
-<ul>
-	<li><a target="_blank" href="http://safeisfast.com">Safe is Fast</a> -- Front end Development and Design</li>
-	<li><a target="_blank" href="http://www.bergfurniture.com">Berg Furniture</a> -- Development and Design <span class="label warning">no longer maintained</span></li> 
-</ul>
-<div id="DO-IT-DO-IT----COME-ON-COME-ON">
-	<div id="EDIT-ME">edit me!</div>
-	<div id="IM-HERE---EDIT-ME">&#10550;</div>
-</div>
-<!-- http://www.youtube.com/watch?v=lOoOP2l_ahQ --></textarea>	
+				<h2>html</h2>
+				<textarea id="html"><div class="container">
+		<div class="row-fluid">
+			<div class="span8 offset2">
+			<h1>Hello!</h1>
+			<h2>My name is Orry and I'm a front end developer.</h2> 
+			<h3>I'm currently living in Brooklyn and working at <a target="_blank" href="http://thetrustedinsight.com">TrustedInsight</a>.</h3>
+			<h3>email me at orrybaram@gmail.com</h3> <!-- no spam please! -->
+
+			<div id="social">
+				<a id="github" target="_blank" href="http://github.com/orrybaram"><i class="icon-github"></i></a>
+				<a id="twitter" target="_blank" href="http://twitter.com/orrybaram"><i class="icon-twitter"></i></a>
+				<a id="linkedin" target="_blank" href="http://www.linkedin.com/pub/orry-baram/32/756/631"><i class="icon-linkedin"></i></a>
+			</div>
+
+			<h3>Previous Projects:</h3>
+			<ul>
+				<li><a target="_blank" href="http://safeisfast.com">Safe is Fast</a> -- Front end Development and Design</li>
+				<li><a target="_blank" href="http://www.bergfurniture.com">Berg Furniture</a> -- Development and Design <span class="label warning">no longer maintained</span></li> 
+			</ul>
+			<!-- http://www.youtube.com/watch?v=lOoOP2l_ahQ -->
+			<div id="DO-IT-DO-IT----COME-ON-COME-ON">
+				<div id="EDIT-ME">edit me!</div>
+				<div id="IM-HERE---EDIT-ME">&#10550;</div>
+			</div>
+		</div>
+	</div>
+</div></textarea>	
 
 	 		</div>
 	 		
@@ -60,11 +74,30 @@
 
 h1 {
 	font: normal 80px 'Pacifico';
+	height:120px;
 }
 
 ul {
 	list-style:none;
 }
+
+#social {
+  margin:15px 0 0 0;
+}
+
+#social a {
+	color:#B4B4B4;
+  	font-size:28px;
+  	margin:10px 10px 0 0;
+}
+
+#social a:hover {
+	text-decoration:none;
+}
+
+#twitter:hover {color:#33CCFF;}
+#linkedin:hover {color:#4875B4;}
+#github:hover {color:black;}
 
 .label {
 	background-color: #302F2F;
@@ -121,6 +154,8 @@ ul {
 		styleTag = $('<style id="iframe-style"></style>').appendTo(head),
 		initial_html = $('#html').val(),
 		initial_css = $('#css').val();
+		code = $('.code-side');
+		output = $('.output');
 
 		console.log(styleTag);
 
@@ -148,6 +183,17 @@ ul {
 			styleTag.text( cssEditor.getValue() );
 		}
 	});
+
+	// Hide and show code panel
+	$('#toggle-code').toggle(function(){
+		code.animate({width: 'hide'});
+		output.animate({ width: ($('.row-fluid').width() * 1) });
+		
+	},function(){
+		code.animate({width: 'show'});
+		output.animate({ width: ($('.row-fluid').width() * .5) });
+	});
+
 })();
 
 </script>
