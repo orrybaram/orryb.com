@@ -9,23 +9,11 @@ body {
 textarea {
   width: 100%;
   margin: 0 auto 50px;
-  height: 300px;
+  height: 85%;
   border-radius: 4px;
   border: 1px solid #292828;
   box-shadow: 0 1px #807F7F;
   background: #3B3D38;
-}
-.code-side {
-  background: #3F3F3F;
-  border-right: 1px solid #181818;
-  background-image: url('../images/noise.png');
-  height: 100%;
-}
-.code-side h2 {
-  color: #303030;
-  text-shadow: 0 -1px #666464;
-  font-family: 'Pacifico', cursive;
-  font-weight: normal;
 }
 .grid {
   height: 100%;
@@ -33,7 +21,25 @@ textarea {
   padding: 20px 30px;
 }
 .grid.code-side {
-  padding-bottom: 80px;
+  background: #3F3F3F;
+  border-right: 1px solid #181818;
+  background-image: url('../images/noise.png');
+  height: 100%;
+  padding-bottom: 70px;
+}
+.grid.code-side form {
+  height: 100%;
+  margin: 0;
+}
+.grid.code-side form .input-area {
+  height: 50%;
+  margin-bottom: 20px;
+}
+.grid.code-side h2 {
+  color: #303030;
+  text-shadow: 0 -1px #666464;
+  font-family: 'Pacifico', cursive;
+  font-weight: normal;
 }
 .output {
   border-left: 1px solid #fff;
@@ -47,12 +53,14 @@ textarea {
 }
 .CodeMirror {
   overflow: visible;
+  height: 90%;
 }
 .CodeMirror-scroll {
   border-radius: 4px;
   border: 1px solid #292828;
   box-shadow: 0 1px #636262;
   background: #252524;
+  height: 100%;
 }
 #header {
   background-color: #252525;
