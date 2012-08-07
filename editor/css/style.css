@@ -17,8 +17,9 @@ textarea {
 }
 .grid {
   height: 100%;
-  overflow: auto;
+  overflow: scroll-y;
   padding: 20px 30px;
+  position: relative;
 }
 .grid.code-side {
   background: #3F3F3F;
@@ -26,6 +27,8 @@ textarea {
   background-image: url('../images/noise.png');
   height: 100%;
   padding-bottom: 70px;
+  position: relative;
+  z-index: 2;
 }
 .grid.code-side form {
   height: 100%;
@@ -50,6 +53,28 @@ textarea {
   border: none;
   width: 100%;
   height: 100%;
+}
+#toggle-code {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  -webkit-transform: rotate(90deg);
+  -moz-transform: rotate(90deg);
+  -ms-transform: rotate(90deg);
+  -o-transform: rotate(90deg);
+  transform: rotate(90deg);
+  background-color: #F13737;
+  padding: 7px 15px;
+  color: white;
+  margin: 0 0 0 -41px;
+  border: 1px dashed white;
+  box-shadow: 0 0 0 2px #f13737, 0px -2px 6px 2px rgba(0, 0, 0, 0.18);
+  text-shadow: 0px -1px #750d0d;
+  text-transform: uppercase;
+}
+#toggle-code:hover {
+  text-decoration: none;
 }
 .CodeMirror {
   overflow: visible;

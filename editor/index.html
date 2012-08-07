@@ -20,7 +20,7 @@
 	<link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
 </head>
 <body>
-<div id="header">v1.3 <a id="toggle-code" href="#">hide code</a></div>
+<div id="header">v1.3</div>
 <div class="row-fluid full-height">
 	<div class="span6 code-side grid">
 		<form>
@@ -233,8 +233,9 @@ body {
 				
 			</div>
 		</form>
-	</div>
 
+	</div>
+	<a id="toggle-code" href="#">hide code</a>
 	<div class="span6 output grid">
 		<iframe id="preview"></iframe>
 	</div>
@@ -284,7 +285,7 @@ body {
 	var codeToggle = $('#toggle-code');
 
 	function hideCode() {
-		codeToggle.text("show code");
+		codeToggle.text("show code").animate({'left': '0%'});
 		contents.find('#DO-IT-DO-IT----COME-ON-COME-ON').fadeOut(500);
 		code.animate({width: 'hide'});
 		output.animate({ width: ($('.row-fluid').width() * 1) }, function(){
@@ -293,7 +294,7 @@ body {
 	}
 
 	function showCode() {
-		codeToggle.text("hide code");
+		codeToggle.text("hide code").animate({'left': '50%'});
 		code.animate({width: 'show'});
 		output.animate({ width: ($('.row-fluid').width() * .5) }, function(){
 			output.css("width", '50%');
