@@ -52,38 +52,46 @@
 </div>
 <script>
   (function() {
-		function alertCurrentEmployer() {
-	  		var currentEmployer = {
+		var defaultSkills = "HTML5, CSS3, JS";
+		
+		var experience = {
+			currentEmployer: {
 	  			name: "TrustedInsight",
 	  			started: "June, 2011",
-	  			website: "http://thetrustedinsight.com"
-	  		}
-	  		alert("I'm currently working at " + currentEmployer.name +".\n" +
-                 "Visit the website at " + currentEmployer.website + ".");
-	  	}
-		//alertCurrentEmployer();
-
-		var previousWork = {
-	      	SIF: {
-	        	name: "Safe Is Fast",
-	        	site: "http://safeisfast.com",
-	        	role: "front end development & design",
-	        	date: "May 2011 - Feb 2012"
-	      	},
-	      	BergFurn: {
-	      		name: "Berg Furniture, Inc",
-	      		site: "http://bergfurniture.com",
-	      		role: "full site development & design, print design, logo design",
-	      		date: "Aug 2009 - Dec 2011",
-	      		notes: "not maintained by me anymore"
-	      	},
-	      	PremierDist: {
-	      		name: "Premier Distribution",
-	      		site: "http://premier-dead-sea.com",
-	      		role: "design & development",
-	      		date: "Sept. 2009"
-	      	}
+	  			website: "http://thetrustedinsight.com",
+	  			skills: defaultSkills + "Python, Django, Less"
+	  		},
+			alertCurrentEmployer: function() {
+		  		alert("I'm currently working at " + this.currentEmployer.name +".\n" +
+	                 "Visit the website at " + this.currentEmployer.website + ".");
+		  	},
+			previousWork: {
+		      	SIF: {
+		        	name: "Safe Is Fast",
+		        	site: "http://safeisfast.com",
+		        	role: "front end development & design",
+		        	date: "May 2011 - Feb 2012",
+		        	skills: defaultSkills + "Rails"
+		      	},
+		      	BergFurn: {
+		      		name: "Berg Furniture, Inc",
+		      		site: "http://bergfurniture.com",
+		      		role: "full site development & design, print design, logo design",
+		      		date: "Aug 2009 - Dec 2011",
+		      		skills: defaultSkills,
+		      		notes: "not maintained by me anymore"
+		      	},
+		      	PremierDist: {
+		      		name: "Premier Distribution",
+		      		site: "http://premier-dead-sea.com",
+		      		role: "design & development",
+		      		date: "Sept. 2009",
+		      		skills: defaultSkills,
+		      		notes: "Runs on opencart"
+		      	}
+			}
 		}
+		//experience.alertCurrentEmployer();
 
 	})();
 </script>
