@@ -209,6 +209,7 @@ ul {
 		$(this).text("show code");
 		code.animate({width: 'hide'});
 		output.animate({ width: ($('.row-fluid').width() * 1) }, function(){
+			output.css("width", '100%');
 			contents.find('#DO-IT-DO-IT----COME-ON-COME-ON').fadeOut(500);
 		});
 		
