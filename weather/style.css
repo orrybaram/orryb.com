@@ -1,0 +1,39 @@
+body {
+	background-image: url('images/noise.png');
+	
+}
+
+.container {
+	margin: 0 auto;
+	width: 960px;
+	text-align: center;
+}
+
+#temp {
+	font-size: 50px;
+	font-family: georgia;
+}
+
+#f {
+	font-family: 'MeteoconsRegular';
+	font-size: 46px;
+	position: relative;
+	left: -10px;
+}
+
+#weather {
+	font-family: 'MeteoconsRegular';
+	font-size: 60px; 
+}
+
+@font-face {
+    font-family: 'MeteoconsRegular';
+    src: url('fonts/meteocons-webfont.eot');
+    src: url('fonts/meteocons-webfont.eot?#iefix') format('embedded-opentype'),
+         url('fonts/meteocons-webfont.woff') format('woff'),
+         url('fonts/meteocons-webfont.ttf') format('truetype'),
+         url('fonts/meteocons-webfont.svg#MeteoconsRegular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
