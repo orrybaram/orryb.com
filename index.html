@@ -1,0 +1,332 @@
+<!doctype html>
+<html>
+<head>
+	<title>Orry Baram: Front End Development</title>
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
+
+	<script src="js/plugins.js"></script>
+
+	<script src="js/codemirror.js"></script>
+	<script src="js/xml.js"></script>
+	<script src="js/javascript.js"></script>
+	<script src="js/css.js"></script>
+	<script src="js/htmlmixed.js"></script>
+	
+	<link rel="stylesheet" href="css/bootstrap.css">
+	<link rel="stylesheet" href="css/codemirror.css">
+	<link rel="stylesheet" href="css/style.css">
+	
+	<link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+</head>
+<body>
+<div id="header">v1.3</div>
+<div class="row-fluid full-height">
+	<div class="span6 code-side grid">
+		<form>
+			<div class="input-area"> 
+				<h2>html</h2>
+				<textarea id="html"><div class="container">
+	<div class="row">
+		<div id="sticker">
+	        <h2>Hello!</h2>
+	        <h3>my name is</h3>
+	        <div id="writing-zone">
+          		<h1>Orry Baram</h1>
+          		<p><i class="icon-bolt"></i> Front end developer <span><i class="icon-map-marker"></i>&nbsp; Brooklyn, NY</span></p>
+          	</div>
+      	</div>
+		<div id="social">
+			<a id="github" target="_blank" href="http://github.com/orrybaram"><i class="icon-github"></i></a>
+			<a id="linkedin" target="_blank" href="http://www.linkedin.com/pub/orry-baram/32/756/631"><i class="icon-linkedin"></i></a>
+			<a id="twitter" target="_blank" href="http://twitter.com/orrybaram"><i class="icon-twitter"></i></a>
+			<a id="email" title="orrybaram@gmail.com" href="mailto:orrybaram@gmail.com"><i class="icon-envelope-alt"></i></a>
+		</div>
+
+		<!-- http://www.youtube.com/watch?v=lOoOP2l_ahQ -->
+		<div id="DO-IT-DO-IT----COME-ON-COME-ON">
+			<div id="EDIT-ME">edit me!</div>
+			<div id="IM-HERE---EDIT-ME">&#10550;</div>
+		</div>
+	</div>
+</div>
+<script>
+  (function() {
+		/* =========================================
+			WORK EXPERIENCE
+		========================================== */
+		var skills = "HTML5, CSS3, JS";
+		
+		var exp = {
+			currentEmployer: {
+	  			name: "TrustedInsight",
+	  			started: "June, 2011",
+	  			website: "http://thetrustedinsight.com",
+	  			skills: skills + "Python, Django, Less",
+	  			alertIt: function() {
+		  			alert("I'm currently working at " + this.name +".\n" +
+	                 "Visit the website at " + this.website + ".");
+		  		}
+	  		},
+			previousWork: {
+		      	SIF: {
+		        	name: "Safe Is Fast",
+		        	site: "http://safeisfast.com",
+		        	role: "front end development & design",
+		        	timestamp: "May 2011 - Feb 2012",
+		        	skills: skills + "Rails"
+		      	},
+		      	TWIWWTSIH: {
+		      		name: "The Weather is Warm When the Sun is Hot",
+		      		site: "http://theweatherswarm.com",
+		      		role: "design & development",
+		      		timestamp: "February 2011",
+		      		skills: skills
+		      	},
+		      	BergFurn: {
+		      		name: "Berg Furniture, Inc",
+		      		site: "http://bergfurniture.com",
+		      		role: "full site development & design, print design, logo design",
+		      		timestamp: "Aug 2009 - Dec 2011",
+		      		skills: skills,
+		      		notes: "not maintained by me anymore"
+		      	},
+		      	PremierDist: {
+		      		name: "Premier Distribution",
+		      		site: "http://premier-dead-sea.com",
+		      		role: "design & development",
+		      		timestamp: "Sept. 2009",
+		      		skills: skills,
+		      		notes: "Runs on opencart"
+		      	}
+			}
+		}
+		//exp.currentEmployer.alertIt();
+	})();
+
+	
+
+</script>
+</textarea>	
+
+	 		</div>
+	 		
+	 		<div class="input-area">
+				<h2>css</h2>
+				<textarea id="css">/* @import http://orryb.com/css/bootstrap.css */
+
+body {
+	background-image: url('http://www.orryb.com/images/noise.png');
+	background-color: #F1F1F1;
+	color: #43473D;
+	font-family: sans-serif;
+	padding: 25px;
+	text-shadow: 0 1px white;
+}
+
+.container {
+	width:100%;
+}
+
+.row {
+	margin: 10% auto;
+	width:400px;
+}
+
+#sticker {
+	height: 250px;
+	width: 400px;
+	border-radius: 15px;
+	text-align: center;
+	box-shadow: 1px 0px 5px 2px #E4E4E4, inset 0 1px #FDCDCD;
+	border: 1px solid #D6D6D6;
+	margin:0 auto;
+	background: #e52200; /* Old browsers */
+	background: -moz-linear-gradient(top,  #e52200 0%, #cc0000 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e52200), color-stop(100%,#cc0000)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  #e52200 0%,#cc0000 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  #e52200 0%,#cc0000 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  #e52200 0%,#cc0000 100%); /* IE10+ */
+	background: linear-gradient(to bottom,  #e52200 0%,#cc0000 100%); /* W3C */
+}
+
+#sticker h2 {
+	font: bold 55px sans-serif;
+	letter-spacing: 5px;
+  	color: white;
+  	height:auto;
+  	text-shadow: 0 1px #B31919;
+ }
+
+#sticker h3 {
+	font: 20px sans-serif;
+  	color: white;
+  	position:relative;
+  	top:-10px;
+  	text-shadow: 0 1px #B31919;
+}
+
+#writing-zone {
+	background-color:white;
+  	height:150px;
+  	position:relative;
+  	top:0px;
+}
+
+#writing-zone h1 {
+	font: normal 70px 'Pacifico';
+    position: relative;
+  	top: -15px;
+  	-moz-transform:rotate(-3deg);
+  	-webkit-transform:rotate(-3deg);
+}
+
+#writing-zone p {
+	font-family:'Pacifico';
+  	font-size: 20px;
+  	position:relative;
+  	top:-5px;
+  	left:15px;
+  	-moz-transform:rotate(-1deg);
+  	-webkit-transform:rotate(-1deg);
+  	text-align: left;
+}
+
+#writing-zone p span {
+	position: relative;
+	top: 6px;
+	right: 25px;
+	-moz-transform: rotate(-1deg);
+	-webkit-transform: rotate(1deg);
+	text-align: right;
+	float: right;
+}
+
+#social {
+  	margin:15px 0 0 10px;
+}
+
+#social a {
+	color:#D5D5D5;
+  	font-size:28px;
+  	margin:10px 10px 0 0;
+}
+
+#social a:hover {
+	text-decoration:none;
+}
+
+#twitter:hover {color:#33CCFF;}
+#linkedin:hover {color:#4875B4;}
+#github:hover {color:black;}
+#email:hover {color: #8F9499;}
+
+#DO-IT-DO-IT----COME-ON-COME-ON {
+	position:relative;
+	left:-50px;
+}
+
+#EDIT-ME {
+	color: #DADADA;
+	font: normal 50px 'Pacifico';
+	margin: 50px 0 0 0;
+	text-shadow: 0 1px #FFF;
+}
+
+#IM-HERE---EDIT-ME {
+	color: #E6E6E6;
+  	font-size: 130px;
+    left:-40px;
+    position:relative;
+    top:50px;
+}
+	</textarea>
+
+				
+			</div>
+		</form>
+
+	</div>
+	<a id="toggle-code" href="#">hide code</a>
+	<div class="span6 output grid">
+		<iframe id="preview"></iframe>
+	</div>
+</div>
+
+<script>
+(function() {
+	
+	var	contents = $('iframe').contents(),
+		body = contents.find('body'),
+		head = contents.find('head'),
+		styleTag = $('<style id="iframe-style"></style>').appendTo(head),
+		initial_html = $('#html').val(),
+		initial_css = $('#css').val();
+		code = $('.code-side');
+		output = $('.output');
+		previewFrame = document.getElementById('preview'),
+	   	preview = previewFrame.contentDocument || previewFrame.contentWindow.document;
+	   	$html = $(preview).find('html');
+
+	//Add bootstrap.css and Pacifico font into preview
+	head.prepend("<link href='http://orryb.com/css/bootstrap.css' rel='stylesheet' type='text/css'>" +
+		"<link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>");
+
+	body.html(initial_html);
+	styleTag.text(initial_css);
+ 
+	//Code Editors
+	var htmlEditor = CodeMirror.fromTextArea(document.getElementById("html"), {
+		mode: "text/html", 
+		tabMode: "indent",
+		theme: "monokai",
+		onChange: function() {
+			body.html( htmlEditor.getValue() );
+		}
+	});
+
+	var cssEditor = CodeMirror.fromTextArea(document.getElementById("css"), {
+		mode: "text/css", 
+		tabMode: "indent",
+		theme: "monokai",
+		onChange: function() {
+			styleTag.text( cssEditor.getValue() );
+		}
+	});
+
+	var codeToggle = $('#toggle-code');
+
+	function hideCode() {
+		codeToggle.text("show code").animate({'left': '0%'});
+		contents.find('#DO-IT-DO-IT----COME-ON-COME-ON').fadeOut(500);
+		code.animate({width: 'hide'});
+		output.animate({ width: ($('.row-fluid').width() * 1) }, function(){
+			output.css("width", '100%');
+		});
+	}
+
+	function showCode() {
+		codeToggle.text("hide code").animate({'left': '50%'});
+		code.animate({width: 'show'});
+		output.animate({ width: ($('.row-fluid').width() * .5) }, function(){
+			output.css("width", '50%');
+			contents.find('#DO-IT-DO-IT----COME-ON-COME-ON').fadeIn(500);
+		});
+	}
+
+	// Hide and show code panel
+	$('#toggle-code').toggle(function(){
+		hideCode();
+	},function(){
+		showCode();
+	});
+
+	// unnecessary jquery fade in!
+	$html.find('.container').hide().delay(800).fadeIn();
+
+})();
+
+</script>
+
+</body>
+</html>

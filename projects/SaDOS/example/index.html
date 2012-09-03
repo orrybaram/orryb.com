@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>SaDOS example</title>
+
+    <script src="../src/sados.js"></script>
+    <script>
+      window.onload = function () {
+        var console_container = document.getElementById('console'),
+            input             = document.getElementById('input');
+            
+
+        /**
+         * The steps are the main thing. Each step defines a message
+         * printed to the user, and a requirement the user's input has
+         * to fulfill. These can be tutorial steps, an interactive
+         * story, whatever.
+         */
+
+        var steps = [
+          {
+            msg: 'Greetings, human.\nPlease enter your name:',
+            req: new SaDOS_Key(13),
+            callback: function() {
+              user = steps[0].input;
+              user_prefix = user + '@orryb.com:~$ ';
+            },
+            pause: 2000
+          },
+          {
+            msg: 'Nice to meet you.',
+            req: ''
+          }
+        ];
+
+        /** 
+         * SaDOS is not as smart as her older sister from Portal. She
+         * doesn't know where and how we want to print the things she
+         * wants to say, so we give her the callback.
+         */
+
+        var sados = new SaDOS(input, steps, function (text) {
+            console_container.innerHTML += text + "\n";
+        });
+
+        /**
+         * We listen on the user's input and feed the data to SaDOS
+         */
+
+        input.addEventListener('keydown', function (e) {
+          sados.check(e.keyCode, input.value);
+        });
+
+        /**
+         * After we configured all that, we start her up
+         */
+       
+        sados.start();
+        
+        input.focus();
+        document.onclick = function() {input.focus();} //input always focused
+      };
+    </script>
+
+    <style type="text/css">
+      body { background: #000; color: #0f0; font-family: monospace; }
+      #console { width: 100%; overflow-y: hidden; margin:0; }
+      #input { width: 60%; background: transparent; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; display: inline-block; }
+      input:focus { outline: none; }​
+    </style>
+  </head>
+
+  <body>
+    <pre id="console"></pre>
+    <span id="user_prefix"></span><input type="text" id="input">
+  </body>
+</html>
