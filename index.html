@@ -15,7 +15,7 @@
 	
 	<link rel="stylesheet" href="css/bootstrap.css">
 	<link rel="stylesheet" href="css/codemirror.css">
-	<link rel="stylesheet" href="css/style.css">
+	<link rel="stylesheet" href="css/main.css">
 	
 	<link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
 </head>
@@ -59,16 +59,23 @@
 		
 		var exp = {
 			currentEmployer: {
-	  			name: "TrustedInsight",
-	  			started: "June, 2011",
-	  			website: "http://thetrustedinsight.com",
-	  			skills: skills + "Python, Django, Less",
+	  			name: "Fancy Hands",
+	  			started: "Sept, 2012",
+	  			website: "http://fancyhands.com",
+	  			skills: skills + "Python, Less",
 	  			alertIt: function() {
 		  			alert("I'm currently working at " + this.name +".\n" +
 	                 "Visit the website at " + this.website + ".");
 		  		}
 	  		},
 			previousWork: {
+		      	TI: {
+		      		name: "TrustedInsight",
+		  			site: "http://thetrustedinsight.com",
+					role: "front end development & design",
+		  			timestamp: "June 2011 -Sept 2012",
+		  			skills: skills + "Python, Django, Less"
+		  		},
 		      	SIF: {
 		        	name: "Safe Is Fast",
 		        	site: "http://safeisfast.com",
@@ -116,7 +123,7 @@
 				<textarea id="css">/* @import http://orryb.com/css/bootstrap.css */
 
 body {
-	background-image: url('http://www.orryb.com/images/noise.png');
+	background-image: url('http://www.orryb.com/img/noise.png');
 	background-color: #F1F1F1;
 	color: #43473D;
 	font-family: sans-serif;
