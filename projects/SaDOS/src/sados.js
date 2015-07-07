@@ -28,10 +28,10 @@
     var commands = {
       ssh: 'haha noway!',
       boobs: 'hooray for boobs',
-      ls: '\nroot     porn      dev',
+      ls: '\ndev    root',
+      'ls -a': '\ndev    root    .porn' 
       cd: 'permission denied',
       sudo: 'Password...',
-      alert: function() { alert('you\'re cool')},
       // 'su ': function(){
       //   user = prompt('Whats your name?');
       //   user_prefix = user + "@orryb.com:~$ "
