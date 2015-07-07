@@ -308,7 +308,7 @@ window.addEventListener("load", function (e) {
                 this.destroy();
                 Q.audio.play('boom1.wav', {loop: false});
                 Q.stageScene("startGame", 1, { label: "Whoops! You fell to your death." });
-                saveScore(player.name, Q.state.get('score'));
+                // saveScore(player.name, Q.state.get('score'));
                 stopAsteroids();
 
             }
@@ -575,20 +575,20 @@ window.addEventListener("load", function (e) {
         } 
     }
 
-    function saveScore(name, score) {    
-        if (!Q.state.get('player_alive')) {
-            console.log('saved!')
-            $.post(SAVE_URL, {'name':name, 'score': score}).
-                success(function (response) {
-                    if(response.status === 'success') {
-                    }
-                    else {
-                        // Todo - Some sort of error
-                    }
-                })
-            ;
-        }
-    }
+    // function saveScore(name, score) {    
+    //     if (!Q.state.get('player_alive')) {
+    //         console.log('saved!')
+    //         $.post(SAVE_URL, {'name':name, 'score': score}).
+    //             success(function (response) {
+    //                 if(response.status === 'success') {
+    //                 }
+    //                 else {
+    //                     // Todo - Some sort of error
+    //                 }
+    //             })
+    //         ;
+    //     }
+    // }
 
 
     // USER INTERACTIONS
