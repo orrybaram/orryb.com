@@ -1,0 +1,17 @@
+{
+  "name": "doge-in-space",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "3.4.8",
+    "mysql": "*",
+    "async": "*",
+    "node-uuid": "*",
+    "cookie-sessions": "*",
+    "node-uuid": "*",
+    "connect-redis": "1.4.x"
+  }
+}
