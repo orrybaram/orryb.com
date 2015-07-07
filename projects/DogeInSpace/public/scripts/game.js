@@ -400,7 +400,7 @@ window.addEventListener("load", function (e) {
                     Q.stageScene("startGame",1, { label: "You were obliterated!", score: Q.state.get('score') }); 
                     collision.obj.destroy();
                     stopAsteroids();
-                    saveScore(player.name, Q.state.get('score'));
+                    // saveScore(player.name, Q.state.get('score'));
                 }
             });
         },
@@ -441,7 +441,7 @@ window.addEventListener("load", function (e) {
                     Q.stageScene("startGame",1, { label: "You Died" }); 
                     collision.obj.destroy();
                     stopAsteroids();
-                    saveScore(player.name, Q.state.get('score'));
+                    // saveScore(player.name, Q.state.get('score'));
                 }
             });
         },
@@ -457,6 +457,7 @@ window.addEventListener("load", function (e) {
     })
     
     function generateSuchText(x,y) {
+        console.log('show it');
         $('#wow_text').removeClass('hidden');
         var wow_choices = [
                 "wow",
@@ -684,7 +685,7 @@ window.addEventListener("load", function (e) {
         } else {
             $player_name.find('input').focus();
         }
-        loadHighscores();
+        // loadHighscores();
     }
 
 
