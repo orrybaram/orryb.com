@@ -29,7 +29,7 @@
       ssh: 'haha noway!',
       boobs: 'hooray for boobs',
       ls: '\ndev    root',
-      'ls -a': '\ndev    root    .porn' 
+      'ls -a': '\ndev    root    .porn',
       cd: 'permission denied',
       sudo: 'Password...',
       // 'su ': function(){
