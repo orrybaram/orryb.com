@@ -457,7 +457,7 @@ window.addEventListener("load", function (e) {
     })
     
     function generateSuchText(x,y) {
-        $('#wow_text').fadeIn(100);
+        $('#wow_text').removeClass('hidden');
         var wow_choices = [
                 "wow",
                 "to the moon!",
@@ -478,7 +478,7 @@ window.addEventListener("load", function (e) {
 
         $('#wow_text').text(text).css({'color': color, left: x, top: y});
 
-        setTimeout(function() { $('#wow_text').fadeOut(500); }, 2000)
+        setTimeout(function() { $('#wow_text').addClass('hidden'); }, 2000)
 
     }
 
