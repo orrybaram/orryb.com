@@ -2,16 +2,30 @@
 <head>
 <title>Listen with me!</title>
 <style>
+    * {
+        box-sizing: border-box;
+    }
     body {
 	    margin:0;
-    	padding:0;
-	    background: #1A1B1D;
+    	background: #1A1B1D;
+        background-size: cover;
+        background-position: center;
         font-family: sans-serif;
+        padding: 100px;
     }
+
     h1,h2, h6 {padding:0; margin:0;}
+    .column {
+        float:left;
+    }
+    .column-left {
+        width:30%;
+    }
+    .column-right {
+        width:70%;
+    }
     #spotify-player-wrapper {
-        float: left;
-        margin-right: 100px;
+        margin-right: 50px;
     }
     .track-info {
         padding: 70px;
@@ -27,20 +41,40 @@
         color: rgba(255,255,255, 0.8);
     }
     .track-info--artist {
+        margin-top: 10px;
+    }
+    .track-info--artist-name {
         font-size: 40px;
         color: rgba(255,255,255, 0.2);
         font-weight: 200;
         font-style: italic;
+        position: relative;
+        top: 7px;
+        left: 20px;
     }
+    .track-info--artist-image {
+        height: 60px;
+        width: 60px;
+        border-radius: 50%;
+        background-position: center;
+        background-size: cover;
+        float: left;
+    }
+
 </style>
 </head>
 <body>
     
-    <div id="spotify-player-wrapper"></div>
-    <section class="track-info">
+    <div class="column column-left">
+        <div id="spotify-player-wrapper"></div>
+    </div>
+    <section class="track-info column column-right">
         <h6 class="track-info--intro"></h6>
         <h1 class="track-info--title"></h1>
-        <h2 class="track-info--artist"></h2>
+        <div class="track-info--artist">
+            <div class="track-info--artist-image"></div>    
+            <h2 class="track-info--artist-name"></h2>
+        </div>
     </section>
 </body>
 
@@ -57,7 +91,8 @@
         var $playerWrapper = document.getElementById('spotify-player-wrapper');
         var $trackIntro = document.getElementsByClassName('track-info--intro')[0]
         var $trackTitle = document.getElementsByClassName('track-info--title')[0]
-        var $trackArtist = document.getElementsByClassName('track-info--artist')[0]
+        var $trackArtist = document.getElementsByClassName('track-info--artist-name')[0]
+        var $trackArtistImage = document.getElementsByClassName('track-info--artist-image')[0]
         
         var currentSong = {};
         var REFRESH_INTERVAL = 10000;
@@ -69,17 +104,26 @@
         
         function init() {
             getCurrentTrack().then(function(data) {
-                console.log(data)
-                currentSong.nowPlaying = data['@attr'].nowplaying;
+                console.log("LastFM", data)
+                try {
+                    currentSong.nowPlaying = data['@attr'].nowplaying;
+                } catch(err) {
+                    console.warn(err);
+                }
                 currentSong.artist = data.artist['#text'];
                 currentSong.track = data.name;
                 updateTitle();
-                updateInfo();
-
+                
                 return getTrackURI();
             }).then(function(data) {
-                console.log(data)
+                console.log("Spotify Search", data)
+                currentSong.albumArt = data.album.images[0];
                 $playerWrapper.innerHTML = buildSpotifyPlayer(data.uri);
+                return getArtistData(data.artists[0].id)
+            }).then(function(data) {
+                console.log(data)
+                currentSong.artistImage = data.images[3];
+                updateInfo();
             })
 
             if(!refreshTimer) {
@@ -151,6 +195,32 @@
             })
         }
 
+        function getArtistData(id) {
+            var url = "http://api.spotify.com/v1/artists/" + id;
+            
+            return new Promise(function(resolve, reject) {
+                var req = new XMLHttpRequest();
+                req.open('GET', url);
+                req.onload = function() {
+                    if (req.status == 200) {
+                        var data = JSON.parse(req.responseText);
+                        try {
+                            resolve(data);
+                        } catch(err) {
+                            reject(err);
+                        }
+                    }
+                    else {
+                        reject(Error(req.statusText));
+                    }
+                };
+                req.onerror = function() {
+                    reject(Error("Network Error"));
+                };
+                req.send();
+            })
+        }
+
         // Returns an iframe with the track's URI
         function buildSpotifyPlayer(trackUri) {
             if(!trackUri) return;
@@ -166,9 +236,16 @@
             if(currentSong.nowPlaying) {
                 introMsg = USER_NAME + " is currently listening to...";
             }
+            console.log(currentSong)
+            
             $trackIntro.innerHTML = introMsg;
             $trackTitle.innerHTML = currentSong.track;
             $trackArtist.innerHTML = currentSong.artist;
+            
+            document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,.85), rgba(0,0,0,.85))";
+            document.body.style.backgroundImage += ', url(' + currentSong.artistImage.url + ')';
+
+            $trackArtistImage.style.backgroundImage = 'url(' + currentSong.artistImage.url + ')';
         }
     
     })();
