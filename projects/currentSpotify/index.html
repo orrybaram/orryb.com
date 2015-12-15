@@ -22,6 +22,7 @@
 
         // Element to inject the widget into
         var $playerWrapper = document.getElementById('spotify-player-wrapper');
+        var currentSong = {};
 
         return {
             init: init
@@ -29,9 +30,11 @@
         
         function init() {
             getCurrentTrack().then(function(data) {
-                var artist = data.artist['#text'];
-                var track = data.name;
-                return getTrackURI(artist, track);
+                currentSong.artist = data.artist['#text'];
+                currentSong.track = data.name;
+                updateTitle();
+
+                return getTrackURI(currentSong.artist, currentSong.track);
             }).then(function(data) {
                 $playerWrapper.innerHTML += buildSpotifyPlayer(data.uri);
             })
@@ -95,6 +98,10 @@
         function buildSpotifyPlayer(trackUri) {
             if(!trackUri) return;
             return '<iframe src="https://embed.spotify.com/?uri=' + trackUri + '" width="300" height="380" frameborder="0" allowtransparency="true"></iframe>';
+        }
+
+        function setTitle() {
+            document.title = currentSong.track + " -- " + currentSong.artist;
         }
     
     })();
