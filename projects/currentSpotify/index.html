@@ -76,7 +76,7 @@
                 updateTitle();
                 updateInfo();
 
-                return getTrackURI(currentSong.artist, currentSong.track);
+                return getTrackURI();
             }).then(function(data) {
                 console.log(data)
                 $playerWrapper.innerHTML = buildSpotifyPlayer(data.uri);
@@ -125,8 +125,8 @@
         }
 
         // Make a call to Spotify to search for the track and return the info
-        function getTrackURI(artist, trackName) {
-            var url = "http://api.spotify.com/v1/search?q=track:" + trackName + "%20artist:" + artist + "&type=track"
+        function getTrackURI() {
+            var url = "http://api.spotify.com/v1/search?q=track:" + encodeURIComponent(currentSong.track) + "%20artist:" + encodeURIComponent(currentSong.artist) + "&type=track"
             
             return new Promise(function(resolve, reject) {
                 var req = new XMLHttpRequest();
