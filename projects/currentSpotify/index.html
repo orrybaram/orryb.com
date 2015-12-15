@@ -60,6 +60,8 @@
         var $trackArtist = document.getElementsByClassName('track-info--artist')[0]
         
         var currentSong = {};
+        var REFRESH_INTERVAL = 10000;
+        var refreshTimer = null;
 
         return {
             init: init
@@ -77,13 +79,27 @@
                 return getTrackURI(currentSong.artist, currentSong.track);
             }).then(function(data) {
                 console.log(data)
-                $playerWrapper.innerHTML += buildSpotifyPlayer(data.uri);
+                $playerWrapper.innerHTML = buildSpotifyPlayer(data.uri);
+            })
+
+            if(!refreshTimer) {
+                refreshTimer = setInterval(refresh, REFRESH_INTERVAL)
+            }
+        }
+
+        function refresh() {
+            console.log("ping");
+            getCurrentTrack().then(function(data) {
+                if(currentSong.track !== data.name && currentSong.track !== data.artist['#text']) {
+                    // kinda lazy
+                    init();
+                }
             })
         }
 
         // Make a call to Last FM to get your latest played tracks;
         function getCurrentTrack() { 
-            var url = "//ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=" + LASTFM_USERNAME + "&api_key=" + LASTFM_API_KEY + "&format=json";
+            var url = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=" + LASTFM_USERNAME + "&api_key=" + LASTFM_API_KEY + "&format=json";
             
             return new Promise(function(resolve, reject) {
                 var req = new XMLHttpRequest();
@@ -110,7 +126,7 @@
 
         // Make a call to Spotify to search for the track and return the info
         function getTrackURI(artist, trackName) {
-            var url = "//api.spotify.com/v1/search?q=track:" + trackName + "%20artist:" + artist + "&type=track"
+            var url = "http://api.spotify.com/v1/search?q=track:" + trackName + "%20artist:" + artist + "&type=track"
             
             return new Promise(function(resolve, reject) {
                 var req = new XMLHttpRequest();
