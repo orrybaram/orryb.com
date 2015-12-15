@@ -1,22 +1,36 @@
 <html>
-<body></body>
+<head>
+<style>
+    body {
+	margin:0;
+    	padding:0;
+	background: #1A1B1D;
+    }
+</style>
+</head>
+<body>
+    <div id="spotify-player-wrapper"></div>
+</body>
 
 <script>
 // Add your own config here
 var LASTFM_API_KEY = "dbad2bc6bc80b741aa8c272d33c9d863";
 var LASTFM_USERNAME = "orrybaram";
 
+
+
 initialize();
 
 // Run this 
 function initialize() {
+    var $playerWrapper = document.getElementById('spotify-player-wrapper');
     getCurrentTrack().then(function(data) {
         var artist = data.artist['#text'];
         var track = data.name;
         return getTrackURI(artist, track);
     }).then(function(data) {
         var player = buildSpotifyPlayer(data.uri);
-        document.body.innerHTML += player;
+        $playerWrapper.innerHTML += player;
     })
 }
 
