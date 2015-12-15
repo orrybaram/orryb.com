@@ -1,67 +1,91 @@
 <html>
 <head>
-<title>Listen with me!</title>
-<style>
-    * {
-        box-sizing: border-box;
-    }
-    body {
-	    margin:0;
-    	background: #1A1B1D;
-        background-size: cover;
-        background-position: center;
-        font-family: sans-serif;
-        padding: 100px;
-    }
+    <title>Listen with me!</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+    	    margin:0;
+        	background: #1A1B1D;
+            background-size: cover;
+            background-position: center;
+            font-family: sans-serif;
+            padding: 100px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
 
-    h1,h2, h6 {padding:0; margin:0;}
-    .column {
-        float:left;
-    }
-    .column-left {
-        width:30%;
-    }
-    .column-right {
-        width:70%;
-    }
-    #spotify-player-wrapper {
-        margin-right: 50px;
-    }
-    .track-info {
-        padding: 70px;
-    }
-    .track-info--intro {
-        font-size: 25px;
-        color: rgba(30, 215, 96, 0.44);
-        font-weight: 200;
-    }
-    .track-info--title {
-        font-size: 65px;
-        color: white;
-        color: rgba(255,255,255, 0.8);
-    }
-    .track-info--artist {
-        margin-top: 10px;
-    }
-    .track-info--artist-name {
-        font-size: 40px;
-        color: rgba(255,255,255, 0.2);
-        font-weight: 200;
-        font-style: italic;
-        position: relative;
-        top: 7px;
-        left: 20px;
-    }
-    .track-info--artist-image {
-        height: 60px;
-        width: 60px;
-        border-radius: 50%;
-        background-position: center;
-        background-size: cover;
-        float: left;
-    }
+        h1,h2, h6 {padding:0; margin:0;}
+        .column {
+            
+        }
+        .column-left {
+            flex: 3 0 0;
+            text-align: center;
 
-</style>
+        }
+        .column-right {
+            flex: 5 0 0;
+        }
+        #spotify-player-wrapper {
+            margin-right: 50px;
+        }
+        .track-info {
+            padding: 70px;
+        }
+        .track-info--intro {
+            font-size: 25px;
+            color: rgba(30, 215, 96, 0.44);
+            font-weight: 200;
+        }
+        .track-info--title {
+            font-size: 65px;
+            color: white;
+            color: rgba(255,255,255, 0.8);
+        }
+        .track-info--artist {
+            margin-top: 10px;
+        }
+        .track-info--artist-name {
+            font-size: 40px;
+            color: rgba(255,255,255, 0.2);
+            font-weight: 200;
+            font-style: italic;
+            position: relative;
+            top: 7px;
+            left: 20px;
+        }
+        .track-info--artist-image {
+            height: 60px;
+            width: 60px;
+            border-radius: 50%;
+            background-position: center;
+            background-size: cover;
+            float: left;
+        }
+
+        @media only screen and (max-width: 767px) {
+            body {
+                padding: 10px;
+                flex-direction: column;
+            }
+            .track-info {
+                padding: 10px;
+            }
+            .column-left, .column-right {
+                flex: 1 0 0;
+                width: 100%;
+            }
+            .column-right {
+                order: -1;
+            }
+        }
+
+    </style>
 </head>
 <body>
     
