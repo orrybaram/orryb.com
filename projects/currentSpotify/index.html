@@ -1,95 +1,104 @@
 <html>
-<body></body>
+<head>
+<style>
+    body {
+	margin:0;
+    	padding:0;
+	background: #1A1B1D;
+    }
+</style>
+</head>
+<body>
+    <div id="spotify-player-wrapper"></div>
+</body>
 
 <script>
 
-var ListenWithMe = (function() {
-    // Add your own config here
-    var LASTFM_API_KEY = "dbad2bc6bc80b741aa8c272d33c9d863";
-    var LASTFM_USERNAME = "orrybaram";
+    var ListenWithMe = (function() {
+        // Add your own config here
+        var LASTFM_API_KEY = "dbad2bc6bc80b741aa8c272d33c9d863";
+        var LASTFM_USERNAME = "orrybaram";
 
-    return {
-        init: init
-    }
-    
-    // Run this 
-    function init() {
-        getCurrentTrack().then(function(data) {
-            var artist = data.artist['#text'];
-            var track = data.name;
-            return getTrackURI(artist, track);
-        }).then(function(data) {
-            var player = buildSpotifyPlayer(data.uri);
-            document.body.innerHTML += player;
-        })
-    }    
+        var $playerWrapper = document.getElementById('spotify-player-wrapper');
 
+        return {
+            init: init
+        }
+        
+        // Run this 
+        function init() {
 
-})()
+            getCurrentTrack().then(function(data) {
+                var artist = data.artist['#text'];
+                var track = data.name;
+                return getTrackURI(artist, track);
+            }).then(function(data) {
+                var player = buildSpotifyPlayer(data.uri);
+                $playerWrapper.innerHTML += player;
+            })
+        }
 
+        // Make a call to Last FM to get your latest played tracks;
+        function getCurrentTrack() { 
+            var url = "//ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=" + LASTFM_USERNAME + "&api_key=" + LASTFM_API_KEY + "&format=json";
+            return new Promise(function(resolve, reject) {
+                var req = new XMLHttpRequest();
+                req.open('GET', url);
+                req.onload = function() {
+                    if (req.status == 200) {
+                        var data = JSON.parse(req.response);
+                        try {
+                            resolve(data.recenttracks.track[0]);
+                        } catch(err) {
+                            reject(err);
+                        }
+                    }
+                    else {
+                        reject(Error(req.statusText));
+                    }
+                };
+                req.onerror = function() {
+                    reject(Error("Network Error"));
+                };
+                req.send();
+            })
+        }
 
+        // Make a call to Spotify to search for the track and return the info
+        function getTrackURI(artist, trackName) {
+            var url = "//api.spotify.com/v1/search?q=track:" + trackName + "%20artist:" + artist + "&type=track"
+            return new Promise(function(resolve, reject) {
+                var req = new XMLHttpRequest();
+                req.open('GET', url);
+                req.onload = function() {
+                    if (req.status == 200) {
+                        var data = JSON.parse(req.responseText);
+                        try {
+                            resolve(data.tracks.items[0]);
+                        } catch(err) {
+                            reject(err);
+                        }
+                    }
+                    else {
+                        reject(Error(req.statusText));
+                    }
+                };
+                req.onerror = function() {
+                    reject(Error("Network Error"));
+                };
+                req.send();
+            })
+        }
 
-initialize();
+        // Returns an iframe with the trackURI
+        function buildSpotifyPlayer(trackUri) {
+            if(!trackUri) return;
+            return '<iframe src="https://embed.spotify.com/?uri=' + trackUri + '" width="300" height="380" frameborder="0" allowtransparency="true"></iframe>';
+        }
 
+    })();
 
-
-// Make a call to Last FM to get your latest played tracks;
-function getCurrentTrack() { 
-    var url = "//ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=" + LASTFM_USERNAME + "&api_key=" + LASTFM_API_KEY + "&format=json";
-    return new Promise(function(resolve, reject) {
-        var req = new XMLHttpRequest();
-        req.open('GET', url);
-        req.onload = function() {
-            if (req.status == 200) {
-                var data = JSON.parse(req.response);
-                try {
-                    resolve(data.recenttracks.track[0]);
-                } catch(err) {
-                    reject(err);
-                }
-            }
-            else {
-                reject(Error(req.statusText));
-            }
-        };
-        req.onerror = function() {
-            reject(Error("Network Error"));
-        };
-        req.send();
-    })
-}
-
-// Make a call to Spotify to search for the track and return the info
-function getTrackURI(artist, trackName) {
-    var url = "https://api.spotify.com/v1/search?q=track:" + trackName + "%20artist:" + artist + "&type=track"
-    return new Promise(function(resolve, reject) {
-        var req = new XMLHttpRequest();
-        req.open('GET', url);
-        req.onload = function() {
-            if (req.status == 200) {
-                var data = JSON.parse(req.responseText);
-                try {
-                    resolve(data.tracks.items[0]);
-                } catch(err) {
-                    reject(err);
-                }
-            }
-            else {
-                reject(Error(req.statusText));
-            }
-        };
-        req.onerror = function() {
-            reject(Error("Network Error"));
-        };
-        req.send();
-    })
-}
-
-// Returns an iframe with the trackURI
-function buildSpotifyPlayer(trackUri) {
-    if(!trackUri) return;
-    return '<iframe src="https://embed.spotify.com/?uri=' + trackUri + '" width="300" height="380" frameborder="0" allowtransparency="true"></iframe>';
-}
+    ListenWithMe.init();
 </script>
 
 </html>
