@@ -11,6 +11,8 @@
 </head>
 <body>
     <div id="spotify-player-wrapper"></div>
+    <div class="track--title"></div>
+    <div class="track--artist"></div>
 </body>
 
 <script>
@@ -22,6 +24,9 @@
 
         // Element to inject the widget into
         var $playerWrapper = document.getElementById('spotify-player-wrapper');
+        var $trackTitle = document.getElementsByClassName('track--title')[0]
+        var $trackArtist = document.getElementsByClassName('track--artist')[0]
+        
         var currentSong = {};
 
         return {
@@ -102,6 +107,11 @@
 
         function updateTitle() {
             document.title = currentSong.track + " -- " + currentSong.artist;
+        }
+
+        function updateInfo() {
+            $trackTitle.innerHTML = currentSong.track;
+            $trackArtist.innerHTML = currentSong.artist;
         }
     
     })();
