@@ -6,26 +6,58 @@
 	    margin:0;
     	padding:0;
 	    background: #1A1B1D;
+        font-family: sans-serif;
+    }
+    h1,h2, h6 {padding:0; margin:0;}
+    #spotify-player-wrapper {
+        float: left;
+        margin-right: 100px;
+    }
+    .track-info {
+        padding: 70px;
+    }
+    .track-info--intro {
+        font-size: 25px;
+        color: rgba(30, 215, 96, 0.44);
+        font-weight: 200;
+    }
+    .track-info--title {
+        font-size: 65px;
+        color: white;
+        color: rgba(255,255,255, 0.8);
+    }
+    .track-info--artist {
+        font-size: 40px;
+        color: rgba(255,255,255, 0.2);
+        font-weight: 200;
+        font-style: italic;
     }
 </style>
 </head>
 <body>
+    
     <div id="spotify-player-wrapper"></div>
-    <div class="track--title"></div>
-    <div class="track--artist"></div>
+    <section class="track-info">
+        <h6 class="track-info--intro"></h6>
+        <h1 class="track-info--title"></h1>
+        <h2 class="track-info--artist"></h2>
+    </section>
 </body>
 
 <script>
 
     var ListenWithMe = (function() {
+        
         // Add your own config here
         var LASTFM_API_KEY = "dbad2bc6bc80b741aa8c272d33c9d863";
         var LASTFM_USERNAME = "orrybaram";
+        var USER_NAME = "Orry"
 
-        // Element to inject the widget into
+        // Elements
         var $playerWrapper = document.getElementById('spotify-player-wrapper');
-        var $trackTitle = document.getElementsByClassName('track--title')[0]
-        var $trackArtist = document.getElementsByClassName('track--artist')[0]
+        var $trackIntro = document.getElementsByClassName('track-info--intro')[0]
+        var $trackTitle = document.getElementsByClassName('track-info--title')[0]
+        var $trackArtist = document.getElementsByClassName('track-info--artist')[0]
         
         var currentSong = {};
 
@@ -35,12 +67,16 @@
         
         function init() {
             getCurrentTrack().then(function(data) {
+                console.log(data)
+                currentSong.nowPlaying = data['@attr'].nowplaying;
                 currentSong.artist = data.artist['#text'];
                 currentSong.track = data.name;
                 updateTitle();
+                updateInfo();
 
                 return getTrackURI(currentSong.artist, currentSong.track);
             }).then(function(data) {
+                console.log(data)
                 $playerWrapper.innerHTML += buildSpotifyPlayer(data.uri);
             })
         }
@@ -110,6 +146,11 @@
         }
 
         function updateInfo() {
+            var introMsg = USER_NAME + " last listened to...";
+            if(currentSong.nowPlaying) {
+                introMsg = USER_NAME + " is currently listening to...";
+            }
+            $trackIntro.innerHTML = introMsg;
             $trackTitle.innerHTML = currentSong.track;
             $trackArtist.innerHTML = currentSong.artist;
         }
