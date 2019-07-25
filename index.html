@@ -1,32 +1,37 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-<head>
-	<title>Orry Baram: Front End Development</title>
-	
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
+  <head>
+    <title>Orry Baram: Front End Development</title>
 
-	<script src="js/plugins.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
 
-	<script src="js/codemirror.js"></script>
-	<script src="js/xml.js"></script>
-	<script src="js/javascript.js"></script>
-	<script src="js/css.js"></script>
-	<script src="js/htmlmixed.js"></script>
-	
-	<link rel="stylesheet" href="css/bootstrap.css">
-	<link rel="stylesheet" href="css/codemirror.css">
-	<link rel="stylesheet" href="css/main.css">
-	
-	<link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
-</head>
-<body>
-<div id="header">v1.3</div>
-<div class="row-fluid full-height">
-	<div class="span6 code-side grid">
-		<form>
-			<div class="input-area"> 
-				<h2>html</h2>
-				<textarea id="html"><div class="container">
+    <script src="js/plugins.js"></script>
+
+    <script src="js/codemirror.js"></script>
+    <script src="js/xml.js"></script>
+    <script src="js/javascript.js"></script>
+    <script src="js/css.js"></script>
+    <script src="js/htmlmixed.js"></script>
+
+    <link rel="stylesheet" href="css/bootstrap.css" />
+    <link rel="stylesheet" href="css/codemirror.css" />
+    <link rel="stylesheet" href="css/main.css" />
+
+    <link
+      href="//fonts.googleapis.com/css?family=Pacifico"
+      rel="stylesheet"
+      type="text/css"
+    />
+  </head>
+  <body>
+    <div id="header">v1.3</div>
+    <div class="row-fluid full-height">
+      <div class="span6 code-side grid">
+        <form>
+          <div class="input-area">
+            <h2>html</h2>
+            <textarea id="html">
+<div class="container">
 	<div class="row">
 		<div id="sticker">
 	        <h2>Hello!</h2>
@@ -56,20 +61,31 @@
 			WORK EXPERIENCE
 		========================================== */
 		var skills = "HTML5, CSS3, JS";
-		
+
 		var exp = {
 			currentEmployer: {
-	  			name: "Fancy Hands",
-	  			started: "Sept, 2012",
-	  			website: "http://fancyhands.com",
-	  			skills: skills + "Python, Less",
-	  			alertIt: function() {
-		  			alert("I'm currently working at " + this.name +".\n" +
-	                 "Visit the website at " + this.website + ".");
-		  		}
+					name: "INTURN",
+					role: "sr. frontend engineer",
+	  			timestamp: "September, 2017",
+	  			website: "https://inturn.co",
+	  			skills: skills + "React, GraphQL, AWS",
 	  		},
 			previousWork: {
-		      	TI: {
+					mic: {
+						name: "Mic",
+						site: "mic.com",
+						role: "product engineer",
+						skills: skills + "React, GraphQL, AWS",
+						timestamp: "January, 2016 - September 2017",
+					},
+					fancyHands: {
+					name: "Fancy Hands",
+	  			timestamp: "Sept, 2012 - January, 2016",
+	  			website: "https://fancyhands.com",
+					skills: skills + "Python, Less",
+					},
+
+					TI: {
 		      		name: "TrustedInsight",
 		  			site: "http://thetrustedinsight.com",
 					role: "front end development & design",
@@ -111,19 +127,20 @@
 		//exp.currentEmployer.alertIt();
 	})();
 
-	
+
 
 </script>
-</textarea>	
+</textarea
+            >
+          </div>
 
-	 		</div>
-	 		
-	 		<div class="input-area">
-				<h2>css</h2>
-				<textarea id="css">/* @import http://orryb.com/css/bootstrap.css */
+          <div class="input-area">
+            <h2>css</h2>
+            <textarea id="css">
+/* @import //orry.io/css/bootstrap.css */
 
 body {
-	background-image: url('http://www.orryb.com/img/noise.png');
+	background-image: url('//www.orry.io/img/noise.png');
 	background-color: #F1F1F1;
 	color: #43473D;
 	font-family: sans-serif;
@@ -247,93 +264,104 @@ body {
     position:relative;
     top:50px;
 }
-	</textarea>
+	</textarea
+            >
+          </div>
+        </form>
+      </div>
+      <a id="toggle-code" href="#">hide code</a>
+      <div class="span6 output grid">
+        <iframe id="preview"></iframe>
+      </div>
+    </div>
 
-				
-			</div>
-		</form>
+    <script>
+      (function() {
+        var contents = $('iframe').contents(),
+          body = contents.find('body'),
+          head = contents.find('head'),
+          styleTag = $('<style id="iframe-style"></style>').appendTo(head),
+          initial_html = $('#html').val(),
+          initial_css = $('#css').val();
+        code = $('.code-side');
+        output = $('.output');
+        (previewFrame = document.getElementById('preview')),
+          (preview =
+            previewFrame.contentDocument ||
+            previewFrame.contentWindow.document);
+        $html = $(preview).find('html');
 
-	</div>
-	<a id="toggle-code" href="#">hide code</a>
-	<div class="span6 output grid">
-		<iframe id="preview"></iframe>
-	</div>
-</div>
+        //Add bootstrap.css and Pacifico font into preview
+        head.prepend(
+          "<link href='//orry.io/css/bootstrap.css' rel='stylesheet' type='text/css'>" +
+            "<link href='//fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>",
+        );
 
-<script>
-	(function() {
-		
-		var	contents = $('iframe').contents(),
-			body = contents.find('body'),
-			head = contents.find('head'),
-			styleTag = $('<style id="iframe-style"></style>').appendTo(head),
-			initial_html = $('#html').val(),
-			initial_css = $('#css').val();
-			code = $('.code-side');
-			output = $('.output');
-			previewFrame = document.getElementById('preview'),
-		   	preview = previewFrame.contentDocument || previewFrame.contentWindow.document;
-		   	$html = $(preview).find('html');
+        body.html(initial_html);
+        styleTag.text(initial_css);
 
-		//Add bootstrap.css and Pacifico font into preview
-		head.prepend("<link href='http://orryb.com/css/bootstrap.css' rel='stylesheet' type='text/css'>" +
-			"<link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>");
+        //Code Editors
+        var htmlEditor = CodeMirror.fromTextArea(
+          document.getElementById('html'),
+          {
+            mode: 'text/html',
+            tabMode: 'indent',
+            theme: 'monokai',
+            onChange: function() {
+              body.html(htmlEditor.getValue());
+            },
+          },
+        );
 
-		body.html(initial_html);
-		styleTag.text(initial_css);
-	 
-		//Code Editors
-		var htmlEditor = CodeMirror.fromTextArea(document.getElementById("html"), {
-			mode: "text/html", 
-			tabMode: "indent",
-			theme: "monokai",
-			onChange: function() {
-				body.html( htmlEditor.getValue() );
-			}
-		});
+        var cssEditor = CodeMirror.fromTextArea(
+          document.getElementById('css'),
+          {
+            mode: 'text/css',
+            tabMode: 'indent',
+            theme: 'monokai',
+            onChange: function() {
+              styleTag.text(cssEditor.getValue());
+            },
+          },
+        );
 
-		var cssEditor = CodeMirror.fromTextArea(document.getElementById("css"), {
-			mode: "text/css", 
-			tabMode: "indent",
-			theme: "monokai",
-			onChange: function() {
-				styleTag.text( cssEditor.getValue() );
-			}
-		});
+        var codeToggle = $('#toggle-code');
 
-		var codeToggle = $('#toggle-code');
+        function hideCode() {
+          codeToggle.text('show code').animate({ left: '0%' });
+          contents.find('#DO-IT-DO-IT----COME-ON-COME-ON').fadeOut(500);
+          code.animate({ width: 'hide' });
+          output.animate({ width: $('.row-fluid').width() * 1 }, function() {
+            output.css('width', '100%');
+          });
+        }
 
-		function hideCode() {
-			codeToggle.text("show code").animate({'left': '0%'});
-			contents.find('#DO-IT-DO-IT----COME-ON-COME-ON').fadeOut(500);
-			code.animate({width: 'hide'});
-			output.animate({ width: ($('.row-fluid').width() * 1) }, function(){
-				output.css("width", '100%');
-			});
-		}
+        function showCode() {
+          codeToggle.text('hide code').animate({ left: '50%' });
+          code.animate({ width: 'show' });
+          output.animate({ width: $('.row-fluid').width() * 0.5 }, function() {
+            output.css('width', '50%');
+            contents.find('#DO-IT-DO-IT----COME-ON-COME-ON').fadeIn(500);
+          });
+        }
 
-		function showCode() {
-			codeToggle.text("hide code").animate({'left': '50%'});
-			code.animate({width: 'show'});
-			output.animate({ width: ($('.row-fluid').width() * .5) }, function(){
-				output.css("width", '50%');
-				contents.find('#DO-IT-DO-IT----COME-ON-COME-ON').fadeIn(500);
-			});
-		}
+        // Hide and show code panel
+        $('#toggle-code').toggle(
+          function() {
+            hideCode();
+          },
+          function() {
+            showCode();
+          },
+        );
 
-		// Hide and show code panel
-		$('#toggle-code').toggle(function(){
-			hideCode();
-		},function(){
-			showCode();
-		});
-
-		// unnecessary jquery fade in!
-		$html.find('.container').hide().delay(800).fadeIn();
-
-	})();
-
-</script>
-
-</body>
+        // unnecessary jquery fade in!
+        $html
+          .find('.container')
+          .hide()
+          .delay(800)
+          .fadeIn();
+      })();
+    </script>
+  </body>
 </html>
