@@ -5,17 +5,14 @@
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
 
-    <script src="/assets/js/plugins.js"></script>
+    <script src="/2012/js/codemirror.js"></script>
+    <script src="/2012/js/xml.js"></script>
+    <script src="/2012/js/javascript.js"></script>
+    <script src="/2012/js/css.js"></script>
+    <script src="/2012/js/htmlmixed.js"></script>
 
-    <script src="/assets/js/codemirror.js"></script>
-    <script src="/assets/js/xml.js"></script>
-    <script src="/assets/js/javascript.js"></script>
-    <script src="/assets/js/css.js"></script>
-    <script src="/assets/js/htmlmixed.js"></script>
-
-    <link rel="stylesheet" href="/assets/css/bootstrap.css" />
-    <link rel="stylesheet" href="/assets/css/codemirror.css" />
-    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link rel="stylesheet" href="/2012/css/codemirror.css" />
+    <link rel="stylesheet" href="/2012/css/editor.css" />
 
     <link
       href="//fonts.googleapis.com/css?family=Pacifico"
@@ -137,10 +134,10 @@
           <div class="input-area">
             <h2>css</h2>
             <textarea id="css">
-/* @import //orry.io/assets/css/bootstrap.css */
+/* @import /2012/css/preview.css */
 
 body {
-	background-image: url('//orry.io/assets/img/noise.png');
+	background-image: url('/2012/img/noise.png');
 	background-color: #F1F1F1;
 	color: #43473D;
 	font-family: sans-serif;
@@ -291,9 +288,9 @@ body {
             previewFrame.contentWindow.document);
         $html = $(preview).find('html');
 
-        //Add bootstrap.css and Pacifico font into preview
+        //Add preview.css and Pacifico font into preview
         head.prepend(
-          "<link href='//orry.io/assets/css/bootstrap.css' rel='stylesheet' type='text/css'>" +
+          "<link href='/2012/css/preview.css' rel='stylesheet' type='text/css'>" +
             "<link href='//fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>",
         );
 

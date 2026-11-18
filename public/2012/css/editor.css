@@ -1,3 +1,108 @@
+/* The bits of Bootstrap 2.0.4 this page used: base type, links, and the fluid two-column grid. */
+body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: #333333;
+  background-color: #ffffff;
+}
+a {
+  color: #0088cc;
+  text-decoration: none;
+}
+a:hover {
+  color: #005580;
+  text-decoration: underline;
+}
+h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 36px;
+}
+.row-fluid {
+  width: 100%;
+}
+.row-fluid:after {
+  display: table;
+  content: '';
+  clear: both;
+}
+.row-fluid .span6 {
+  display: block;
+  width: 50%;
+  min-height: 28px;
+  box-sizing: border-box;
+  float: left;
+}
+.full-height {
+  height: 100%;
+}
+
+/* Based on Sublime Text's Monokai theme */
+.cm-s-monokai {
+  background: #272822;
+  color: #f8f8f2;
+}
+.cm-s-monokai div.CodeMirror-selected {
+  background: #49483e !important;
+}
+.cm-s-monokai .CodeMirror-gutter {
+  background: #272822;
+  border-right: 0px;
+}
+.cm-s-monokai .CodeMirror-gutter-text {
+  color: #d0d0d0;
+}
+.cm-s-monokai .CodeMirror-cursor {
+  border-left: 1px solid #f8f8f0 !important;
+}
+.cm-s-monokai span.cm-comment {
+  color: #75715e;
+}
+.cm-s-monokai span.cm-atom {
+  color: #ae81ff;
+}
+.cm-s-monokai span.cm-number {
+  color: #ae81ff;
+}
+.cm-s-monokai span.cm-property,
+.cm-s-monokai span.cm-attribute {
+  color: #72e9cc;
+}
+.cm-s-monokai span.cm-keyword {
+  color: #f92672;
+}
+.cm-s-monokai span.cm-string {
+  color: #e6db74;
+}
+.cm-s-monokai span.cm-variable {
+  color: #adff00;
+}
+.cm-s-monokai span.cm-variable-2 {
+  color: #9effff;
+}
+.cm-s-monokai span.cm-def {
+  color: #fd971f;
+}
+.cm-s-monokai span.cm-error {
+  background: #f92672;
+  color: #f8f8f0;
+}
+.cm-s-monokai span.cm-bracket {
+  color: #f8f8f2;
+}
+.cm-s-monokai span.cm-tag {
+  color: #ee365b;
+}
+.cm-s-monokai span.cm-link {
+  color: #ae81ff;
+}
+.cm-s-monokai .CodeMirror-matchingbracket {
+  text-decoration: underline;
+  color: white !important;
+}
+
+/* Page */
 html {
   height: 100%;
 }

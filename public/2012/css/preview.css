@@ -1,0 +1,86 @@
+/* Loaded into the live preview iframe: the Bootstrap 2.0.4 base the sticker markup was written
+   against, plus the Font Awesome icons it uses. */
+body {
+  margin: 0;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  color: #333333;
+  background-color: #ffffff;
+}
+a {
+  color: #0088cc;
+  text-decoration: none;
+}
+a:hover {
+  color: #005580;
+  text-decoration: underline;
+}
+p {
+  margin: 0 0 9px;
+}
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: inherit;
+  font-weight: bold;
+  color: inherit;
+}
+h1 {
+  font-size: 30px;
+  line-height: 36px;
+}
+h2 {
+  font-size: 24px;
+  line-height: 36px;
+}
+h3 {
+  font-size: 18px;
+  line-height: 27px;
+}
+.container {
+  width: 940px;
+  margin-right: auto;
+  margin-left: auto;
+}
+.row {
+  margin-left: -20px;
+}
+.container:before,
+.container:after,
+.row:before,
+.row:after {
+  display: table;
+  content: '';
+}
+.container:after,
+.row:after {
+  clear: both;
+}
+
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('../fonts/fontawesome-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+[class^='icon-']:before,
+[class*=' icon-']:before {
+  font-family: FontAwesome;
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  text-decoration: inherit;
+}
+a [class^='icon-'],
+a [class*=' icon-'] {
+  display: inline-block;
+  text-decoration: inherit;
+}
+.icon-map-marker:before { content: '\f041'; }
+.icon-twitter:before { content: '\f099'; }
+.icon-github:before { content: '\f09b'; }
+.icon-envelope-alt:before { content: '\f0e0'; }
+.icon-linkedin:before { content: '\f0e1'; }
+.icon-bolt:before { content: '\f0e7'; }
