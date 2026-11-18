@@ -20,9 +20,11 @@ the stitched ghost and icons, and the sticker. The sticker and the links are rea
 otherwise the same layout is drawn with Canvas 2D. The handwriting and the ghost are embedded
 as data URIs. To see which path is running, remove `hidden` from `#badge`.
 
-Easter egg: press **X** (mouse and keyboard only) for an x-ray lens that follows the cursor and shows the
-page's own source and the sticker's and links' element boxes. The shader tints the film (`uXray`); the `#xray` canvas
-draws the code and boxes. The console hints at it.
+Easter egg: press **X** to switch the whole page to an old CRT monitor showing an x-ray: the page's own
+source and the sticker's and links' element boxes. The `#xray` canvas draws the code and boxes; the shader takes it
+as a texture (`uXrayTex`) and does the film tint, slightly curved glass, scanlines, phosphor stripes and the power on/off
+(`uXray`). Without WebGL the canvas is shown as is, with its own scanlines. The console hints at it, and so does the
+back of the sticker: pull the top-right corner all the way over to the left for a small ballpoint doodle along the bottom edge, near the fold (an X key → `</>`).
 
 ## 2012 homepage
 
