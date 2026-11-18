@@ -149,8 +149,9 @@
   }
   #badge b { font-weight: 500; color: var(--thread); }
 
-  /* X-ray lens (press X): source code and the sticker's element boxes, drawn under the mouse.
-     It never takes the pointer, so peeling, links and text selection work through it. */
+  /* X-ray (press X): source code and the sticker's element boxes. With WebGL it's only a texture
+     for the shader (kept hidden); without, it's shown over the page. It never takes the pointer,
+     so peeling, links and text selection work through it. */
   #xray {
     position: fixed; left: 0; top: 0; z-index: 1;
     pointer-events: none;
@@ -241,7 +242,8 @@
     uniform vec4 uHairA;     // ghost's hair: P0, P1 (css px)
     uniform vec4 uHairB;     // ...P2, P3
     uniform vec3 uSeam;     // side seam: x at y0, y0, curvature (css px)
-    uniform vec4 uXray;     // x-ray lens: centre (css px), radius, strength 0..1
+    uniform vec4 uXray;     // x-ray monitor: on 0..1, time (s), unused, unused
+    uniform sampler2D uXrayTex;  // the x-ray's code wall and element boxes (the #xray canvas)
 
     vec3 mod289(vec3 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
     vec2 mod289(vec2 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
@@ -427,6 +429,37 @@
       return smoothstep(r + 0.7, r - 0.3, d);
     }
 
+    // The hint, in the same pen: a keycap with an X on it, an arrow, and </>. s is in the
+    // drawing's own frame (px at a 420px-wide sticker), centred on 0. Returns ink coverage.
+    float sdRBox(vec2 p, vec2 b, float r){
+      vec2 q = abs(p) - b + r;
+      return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+    }
+    float penHint(vec2 s){
+      vec2 kc = s - vec2(-30.0, 0.0);
+      kc.x += 0.04 * kc.y;                                               // drawn a bit quickly: leans
+      float d = abs(sdRBox(kc, vec2(15.0, 14.0), 3.5));                  // the keycap: its base...
+      vec2 tf = kc - vec2(0.0, -2.5);
+      d = min(d, abs(sdRBox(tf, vec2(10.5, 9.5), 2.5)));                 // ...its raised top face...
+      d = min(d, sdSeg(kc, vec2(-9.5, -11.0), vec2(-14.0, -13.0)));      // ...and the bevels at its corners
+      d = min(d, sdSeg(kc, vec2(9.5, -11.0), vec2(14.0, -13.0)));
+      d = min(d, sdSeg(kc, vec2(-9.5, 6.0), vec2(-14.0, 13.0)));
+      d = min(d, sdSeg(kc, vec2(9.5, 6.0), vec2(14.0, 13.0)));
+      d = min(d, sdSeg(tf, vec2(-6.0, -6.0), vec2(6.0, 6.0)) - 0.5);     // a big X on it, pressed hard
+      d = min(d, sdSeg(tf, vec2(6.0, -6.5), vec2(-6.0, 5.5)) - 0.5);
+      d = min(d, sdSeg(s, vec2(-10.0, 0.8), vec2(3.5, -0.4)));           // arrow
+      d = min(d, sdSeg(s, vec2(-1.5, -4.5), vec2(3.5, -0.4)));
+      d = min(d, sdSeg(s, vec2(-1.0, 4.0), vec2(3.5, -0.4)));
+      vec2 b = s - vec2(30.0, 0.0);                                      // </>
+      d = min(d, sdSeg(b, vec2(-6.0, -7.0), vec2(-13.0, 0.0)));
+      d = min(d, sdSeg(b, vec2(-13.0, 0.0), vec2(-6.0, 7.0)));
+      d = min(d, sdSeg(b, vec2(-2.5, 8.5), vec2(2.5, -8.5)));
+      d = min(d, sdSeg(b, vec2(6.0, -7.0), vec2(13.0, 0.0)));
+      d = min(d, sdSeg(b, vec2(13.0, 0.0), vec2(6.0, 7.0)));
+      float r = 1.15 + 0.3 * snoise(s * 0.09 + 3.0);
+      return smoothstep(r + 0.7, r - 0.3, d);
+    }
+
     // One cat hair stuck to the backing: a gently bowed strand from A to B (uv on the sticker),
     // fine and fading at both ends. Returns coverage.
     float catHair(vec2 q, vec2 a, vec2 b, float bend){
@@ -461,7 +494,30 @@
     }
 
     void main(){
-      vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uDpr;
+      vec2 p0 = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uDpr;
+      vec2 p = p0;
+
+      // ---- x-ray monitor (press X): the whole page turns into an old CRT showing a radiograph.
+      // Switching on, the picture opens out from a bright line across the middle (and shuts back
+      // down to it, then a dot); inside it the scene is drawn through a curved-glass warp.
+      vec2 vpx = uRes / uDpr;                   // viewport, css px
+      float crt = 0.0, crtGlow = 0.0;
+      vec2 cuv = vec2(0.0);
+      if (uXray.x > 0.0) {
+        float a = uXray.x;
+        float hx = mix(0.004, 1.0, smoothstep(0.0, 0.3, a));          // the line grows out sideways...
+        float hy = mix(1.5 / vpx.y, 1.0, smoothstep(0.3, 1.0, a));     // ...then opens up and down
+        vec2 dd = abs(p0 - vpx * 0.5) - vpx * 0.5 * vec2(hx, hy);
+        float od = length(max(dd, 0.0));
+        crt = step(od, 0.0);
+        crtGlow = (1.0 - smoothstep(0.3, 1.0, a)) * (crt * 0.9 + 0.8 * exp(-od / 5.0));   // the flash while it's thin
+        if (crt > 0.0) {
+          cuv = p0 / vpx * 2.0 - 1.0;
+          vec2 bow = cuv.yx * vec2(0.22, 0.26);
+          cuv = cuv * 0.93 + cuv * bow * bow;           // curved glass: straight lines bow outward, still filling the screen
+          p = (cuv * 0.5 + 0.5) * vpx;
+        }
+      }
 
       // fold normal
       float e = 1.5;
@@ -707,6 +763,19 @@
               flapC = mix(flapC, inkC, ink);
             }
           }
+          // and a small hint for whoever peels it, along the bottom edge (well in from the right) and written along
+          // the bottom edge, the right way round when seen from the back (it shows when the top-right
+          // corner is pulled all the way over to the left)
+          {
+            float kk = uSize.x / 420.0;
+            vec2 bd = Lr - uSize + vec2(235.0, 20.0) * kk;
+            vec2 bs = vec2(-bd.x, bd.y) / kk / 0.62;
+            if (dot(bs, bs) < 3600.0) {
+              float ink = penHint(bs) * (0.82 + 0.12 * snoise(bs * 0.25 + 9.0));
+              vec3 inkC = vec3(0.12, 0.33, 0.82) * (0.72 + 0.32 * max(dot(nF, L), 0.0));
+              flapC = mix(flapC, inkC, ink);
+            }
+          }
           float ch = catHairs(Lr);
           flapC = mix(flapC * (1.0 - 0.06 * ch), vec3(0.80, 0.79, 0.77) * (0.65 + 0.42 * max(dot(nF, L), 0.0)), ch * 0.7);   // pale, just a shade off the glue
         }
@@ -738,20 +807,43 @@
       vec2 vq = (p * uDpr - uRes * 0.5) / uRes;
       col *= 1.0 - 0.22 * dot(vq, vq);
 
-      // ---- x-ray lens: inside it everything turns to blue-black radiograph film, lit a touch
-      // brighter in the middle like a lightbox. The code and the element boxes are drawn on top
-      // by the #xray canvas, cut to the same circle.
-      if (uXray.w > 0.0) {
-        float xd = length(p - uXray.xy) / max(uXray.z, 1.0);
-        float xm = uXray.w * (1.0 - smoothstep(1.0 - 10.0 / max(uXray.z, 1.0), 1.0, xd));
-        if (xm > 0.0) {
-          float lum = dot(col, vec3(0.3, 0.59, 0.11));
-          float gx = clamp((lum * 0.7 - 0.5) * 1.7 + 0.5, 0.0, 1.0);
-          vec3 film = gx * vec3(0.5, 0.68, 0.88) + vec3(0.015, 0.035, 0.07);
-          film += vec3(0.05, 0.09, 0.14) * (1.0 - xd);              // the lightbox glow
-          film *= 1.0 - 0.55 * xd * xd;                              // falling off toward the rim
-          col = mix(col, film, xm);
-        }
+      if (crt > 0.0) {
+        float t = uXray.y;
+        vec2 uv = p / vpx;
+        // a slow bright band rolling down the tube, and the picture slipping sideways inside it
+        float roll = fract(t * 0.11);
+        float r0 = (uv.y - roll) * 9.0, r1 = (uv.y - roll + 1.0) * 9.0;
+        float bar = exp(-r0 * r0) + exp(-r1 * r1);
+        uv.x += bar * 0.0025 * sin(uv.y * 160.0 + t * 7.0);
+        // radiograph film: everything to blue-black, the sticker and threads glowing pale
+        float lum = dot(col, vec3(0.3, 0.59, 0.11));
+        float gx = clamp((lum * 0.7 - 0.5) * 1.7 + 0.5, 0.0, 1.0);
+        vec3 tube = gx * vec3(0.5, 0.68, 0.88) + vec3(0.02, 0.04, 0.075);
+        // the code and the element boxes, with the colour fringes of a tube that's slightly out of convergence
+        vec2 ca = (uv - 0.5) * 2.2 / vpx;
+        vec4 xt = texture2D(uXrayTex, uv);
+        float xr = texture2D(uXrayTex, uv + ca).a, xb = texture2D(uXrayTex, uv - ca).a;
+        tube = tube * (1.0 - xt.a) + xt.rgb;
+        tube += vec3(xr - xt.a, 0.0, xb - xt.a) * 0.35;
+        // a little bloom: the bright bits bleed into their neighbours
+        vec4 b1 = texture2D(uXrayTex, uv + vec2(3.0, 0.0) / vpx) + texture2D(uXrayTex, uv - vec2(3.0, 0.0) / vpx)
+                + texture2D(uXrayTex, uv + vec2(0.0, 3.0) / vpx) + texture2D(uXrayTex, uv - vec2(0.0, 3.0) / vpx);
+        tube += b1.rgb * 0.08;
+        tube += vec3(0.04, 0.07, 0.10) * bar;
+        // scanlines (bent with the glass) and the phosphor stripes
+        float sl = 0.5 + 0.5 * cos(p.y * 6.2832 / 3.0);
+        tube *= 0.66 + 0.42 * sl;
+        float tri = mod(floor(gl_FragCoord.x), 3.0);
+        tube *= 0.86 + 0.2 * vec3(step(tri, 0.5), step(abs(tri - 1.0), 0.5), step(1.5, tri));
+        // flicker, static, and the tube darkening toward its edges
+        tube *= 0.96 + 0.04 * hash(vec2(floor(t * 24.0), 3.1));
+        tube += (hash(floor(p0 * uDpr) + fract(t * 7.3) * 91.0) - 0.5) * 0.045;
+        vec2 cv = uv * (1.0 - uv);
+        tube *= pow(clamp(cv.x * cv.y * 16.0, 0.0, 1.0), 0.3);
+        tube *= 1.12;
+        col = tube + crtGlow * vec3(0.75, 0.88, 1.0);
+      } else {
+        col += crtGlow * vec3(0.75, 0.88, 1.0);      // the halo round the line as it powers on/off
       }
       gl_FragColor = vec4(col, 1.0);
     }`;
@@ -799,7 +891,7 @@
   gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
 
   const U = {};
-  ['uRes', 'uDpr', 'uLight', 'uTex', 'uCenter', 'uSize', 'uAngle', 'uScale', 'uZoom', 'uAnchor', 'uHairA', 'uHairB', 'uSeam', 'uCorner', 'uDrag', 'uPoke', 'uPokeV', 'uLinkTex', 'uLinkCenter', 'uLinkSize', 'uLinkHover', 'uSweep', 'uPucker', 'uEmb', 'uEmbDir', 'uEmbCenter', 'uEmbSize', 'uEmbAngle', 'uXray']
+  ['uRes', 'uDpr', 'uLight', 'uTex', 'uCenter', 'uSize', 'uAngle', 'uScale', 'uZoom', 'uAnchor', 'uHairA', 'uHairB', 'uSeam', 'uCorner', 'uDrag', 'uPoke', 'uPokeV', 'uLinkTex', 'uLinkCenter', 'uLinkSize', 'uLinkHover', 'uSweep', 'uPucker', 'uEmb', 'uEmbDir', 'uEmbCenter', 'uEmbSize', 'uEmbAngle', 'uXray', 'uXrayTex']
     .forEach(n => U[n] = gl.getUniformLocation(prog, n));
 
   const tex = gl.createTexture();
@@ -1010,6 +1102,18 @@
     set('links', linksText, fitAffine(elementM.links, LINKS_W, LINKS_H, linksPointAt));
   }
 
+  // ---- X-ray texture (unit 4): the x-ray script's canvas, uploaded each frame while it's on
+  const xrayTex = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE4);
+  gl.bindTexture(gl.TEXTURE_2D, xrayTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+  gl.activeTexture(gl.TEXTURE0);
+  gl.uniform1i(U.uXrayTex, 4);
+
   // ---- Links texture (unit 3): the live <nav> via HTML-in-Canvas, else the same layout in 2D
   const linkTex = gl.createTexture();
   gl.activeTexture(gl.TEXTURE3);
@@ -1147,7 +1251,14 @@
     const seamX = Math.min(innerWidth - 28, layout.cx + layout.w / 2 + Math.max(110, innerWidth * 0.18));
     const seamY0 = innerHeight * 0.4;
     gl.uniform3f(U.uSeam, seamX, seamY0, 70 / (seamY0 * seamY0));
-    gl.uniform4f(U.uXray, xray.x || 0, xray.y || 0, xray.r || 0, xray.amt || 0);
+    gl.uniform4f(U.uXray, xray.amt || 0, (performance.now() / 1000) % 1000, 0, 0);
+    if (xray.amt > 0 && xray.canvas) {
+      gl.activeTexture(gl.TEXTURE4);
+      gl.bindTexture(gl.TEXTURE_2D, xrayTex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, xray.canvas);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+    }
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
@@ -1202,7 +1313,7 @@
 
   let raf = 0;
   function schedule() { if (!raf) raf = requestAnimationFrame(frame); }
-  // the x-ray lens (its own script, below) sets xray.x/y/r/amt and asks for a redraw
+  // the x-ray (its own script, below) sets xray.amt and xray.canvas and asks for a redraw
   const xray = window.orryXray = window.orryXray || {};
   xray.redraw = schedule;
   // Cloth reacting to the cursor. The pointer's motion pulls on a damped spring (dx, dy);
@@ -1557,21 +1668,23 @@
 })();
 </script>
 <script>
-// ---- X-ray (press X): a lens that follows the mouse and shows what the shirt is made of. The page's
-// own source glows through the fabric and the sticker's and links' HTML elements show as white
-// "bones". The shader does the film tint (uXray); this canvas draws the code and the boxes, cut to
-// the same circle. Mouse and keyboard only: on touch-only devices there is no x-ray.
+// ---- X-ray (press X): the whole page becomes an old CRT monitor showing what the shirt is made of.
+// The page's own source glows through the fabric and the sticker's and links' HTML elements show as
+// white "bones". This canvas draws the code and the boxes; with WebGL the shader takes it as a texture
+// (uXrayTex) and does the film tint, the curved glass, scanlines and the power on/off. Without WebGL
+// the canvas is shown as it is, with scanlines of its own.
 (() => {
   const cv = document.getElementById('xray');
   const ctx = cv.getContext('2d');
   const X = window.orryXray = window.orryXray || {};
-  Object.assign(X, { x: 0, y: 0, r: 0, amt: 0 });
+  Object.assign(X, { amt: 0, canvas: cv });
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const canHover = matchMedia('(any-hover: hover)').matches;
+  const nogl = () => document.documentElement.classList.contains('nogl');
+  const hairs = document.getElementById('hairs');
 
   const FONT = '400 10px "IBM Plex Mono", ui-monospace, Menlo, monospace';
   const LABEL_FONT = '500 10.5px "IBM Plex Mono", ui-monospace, Menlo, monospace';
-  const LINE = 12.5, PAD = 14, GAP = 26, RADIUS = 165, FEATHER = 10;
+  const LINE = 12.5, PAD = 30, GAP = 26;
   // radiograph tones: mostly brightness, strings a faint warm film-amber
   const C = { base: '#a9d6ff', tag: '#f2f9ff', attr: '#b7dcff', str: '#f1d7a6', com: '#56769a', num: '#d6ecff' };
 
@@ -1632,11 +1745,14 @@
   }
 
   // ---- the code wall: the file, wrapped into columns across the window. It drifts slowly upward
-  // while the lens is open, so the whole file (head, styles, shader, scripts) comes past in a few
-  // minutes. Only the rows under the lens are drawn each frame.
+  // while the x-ray is on, so the whole file (head, styles, shader, scripts) comes past in a few
+  // minutes. The rows on screen are drawn into a cache once per row step, then slid into place.
   let W = 0, H = 0, dpr = 1, wall = null;
+  const cache = document.createElement('canvas'), cctx = cache.getContext('2d');
+  let cachedBase = -1;
   function buildWall() {
     wall = { rows: [], cols: 1, colW: 0, rowsPerCol: 1, cw: 6 };
+    cachedBase = -1;
     if (!lines || !lines.length) return;
     ctx.font = FONT;
     const cw = ctx.measureText('M').width || 6;
@@ -1655,29 +1771,35 @@
       }
       rows.push(row);
     }
-    wall = { rows, cols, colW, cw, rowsPerCol: Math.max(1, Math.ceil((H - 2 * PAD) / LINE)) };
+    wall = { rows, cols, colW, cw, rowsPerCol: Math.max(1, Math.ceil((H - 2 * PAD) / LINE) + 1) };
   }
   const DRIFT = 3.2;                         // rows per second
   let drift = 0;
-  function drawCode(x, y, r) {
-    const { rows, cols, colW, cw, rowsPerCol } = wall;
-    if (!rows.length) return;
-    const n = rows.length, base = Math.floor(drift), frac = drift - base;
-    ctx.font = FONT; ctx.textBaseline = 'top';
-    ctx.globalAlpha = 0.42;
-    ctx.shadowColor = 'rgba(120, 190, 255, .8)'; ctx.shadowBlur = 6;
+  function paintCache(base) {
+    const { rows, cols, colW, cw, rowsPerCol } = wall, n = rows.length;
+    cache.width = Math.round(W * dpr); cache.height = Math.round((H + LINE) * dpr);
+    cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cctx.font = FONT; cctx.textBaseline = 'top';
+    cctx.globalAlpha = 0.5;
+    cctx.shadowColor = 'rgba(120, 190, 255, .8)'; cctx.shadowBlur = 5;
     for (let c = 0; c < cols; c++) {
       const cx = PAD + c * (colW + GAP);
-      if (cx > x + r || cx + colW < x - r) continue;
-      const first = Math.max(0, Math.floor((y - r - PAD) / LINE + frac));
-      const last = Math.min(rowsPerCol, Math.ceil((y + r - PAD) / LINE + frac) + 1);
-      for (let i = first; i <= last; i++) {
+      for (let i = 0; i <= rowsPerCol; i++) {
         const row = rows[(base + c * rowsPerCol + i) % n];
-        const ry = PAD + (i - frac) * LINE;
-        for (const [t, col, at] of row) { ctx.fillStyle = col; ctx.fillText(t, cx + at * cw, ry); }
+        for (const [t, col, at] of row) { cctx.fillStyle = col; cctx.fillText(t, cx + at * cw, PAD + i * LINE); }
       }
     }
-    ctx.globalAlpha = 1;
+    cachedBase = base;
+  }
+  function drawCode() {
+    if (!wall.rows.length) return;
+    const base = Math.floor(drift), frac = drift - base;
+    if (base !== cachedBase) paintCache(base);
+    // the wall stays inside the margins: rows slide out under the top edge, not over it
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, PAD - 2, W, H - 2 * PAD + 4); ctx.clip();
+    ctx.drawImage(cache, 0, -frac * LINE, W, H + LINE);
+    ctx.restore();
   }
 
   // ---- the bones: every element's box, through the same bent transform the drawing uses
@@ -1731,12 +1853,12 @@
 
   // ---- drawing
   function resize() {
-    dpr = Math.min(devicePixelRatio || 1, 2);
+    // with WebGL this canvas is a texture: css-px resolution is plenty under scanlines
+    dpr = nogl() ? Math.min(devicePixelRatio || 1, 2) : 1;
     W = innerWidth; H = innerHeight;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     cv.style.width = W + 'px'; cv.style.height = H + 'px';
     wall = null;
-    if (!target.moved) { target.x = W / 2; target.y = H * 0.43; }
     kick();
   }
   function draw() {
@@ -1744,19 +1866,17 @@
     ctx.clearRect(0, 0, cv.width, cv.height);
     if (X.amt <= 0) return;
     if (!wall) buildWall();
-    const { x, y, r } = X;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // everything here is cut to the lens by the feathered mask below (no clip(): with shadows it
-    // can drop the drawing in Chrome's accelerated canvas)
-    ctx.save();
-    if (document.documentElement.classList.contains('nogl')) {   // no shader tint: lay the film down here
-      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, 'rgba(10, 26, 48, .9)'); g.addColorStop(1, 'rgba(2, 8, 18, .96)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    const flat = nogl();
+    if (flat) {                                    // no shader: lay the film down here
+      const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.hypot(W, H) / 2);
+      g.addColorStop(0, 'rgba(14, 32, 56, .94)'); g.addColorStop(1, 'rgba(2, 6, 14, .98)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     }
-    drawCode(x, y, r);
+    drawCode();
 
     // bones
+    ctx.save();
     ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(232, 246, 255, .92)';
     ctx.shadowColor = 'rgba(140, 205, 255, .75)'; ctx.shadowBlur = 10;
     ctx.font = LABEL_FONT; ctx.fillStyle = '#eaf6ff';
@@ -1776,44 +1896,32 @@
     }
     ctx.restore();
 
-    // a feathered edge, then a faint rim and glow round the lens
-    ctx.save();
-    ctx.globalCompositeOperation = 'destination-in';
-    const f = ctx.createRadialGradient(x, y, 0, x, y, r);
-    f.addColorStop(0, `rgba(0,0,0,${X.amt})`);
-    f.addColorStop(Math.max(0, 1 - FEATHER / r), `rgba(0,0,0,${X.amt})`);
-    f.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = f; ctx.fillRect(0, 0, W, H);
-    ctx.restore();
-    ctx.save();
-    ctx.globalAlpha = X.amt;
-    ctx.strokeStyle = 'rgba(170, 215, 255, .35)'; ctx.lineWidth = 1;
-    ctx.shadowColor = 'rgba(80, 150, 230, .5)'; ctx.shadowBlur = 40;
-    ctx.beginPath(); ctx.arc(x, y, r - FEATHER / 2, 0, Math.PI * 2); ctx.stroke();
-    ctx.restore();
+    if (flat) {                                    // scanlines, and the whole thing fading in and out
+      ctx.fillStyle = 'rgba(0, 0, 0, .28)';
+      for (let y = 0; y < H; y += 3) ctx.fillRect(0, y, W, 1);
+      ctx.globalCompositeOperation = 'destination-in';
+      ctx.fillStyle = `rgba(0,0,0,${X.amt})`; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'source-over';
+    }
   }
 
-  // ---- state: on/off eases the lens open and shut; the lens trails the mouse a little
+  // ---- state: on/off runs the tube's power-on and power-off over ~half a second
   let on = false, raf = 0, last = 0;
-  const target = { x: 0, y: 0, moved: false };
   const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
   function tick(now) {
     raf = 0;
     const raw = now - (last || now), dt = Math.min(64, raw); last = now;
     const goal = on ? 1 : 0;
     if (!reduceMotion && X.amt > 0) drift += DRIFT * dt / 1000;
-    const step = reduceMotion ? 1 : raw / 300;          // opens in 300ms however slow the frames
+    const step = reduceMotion ? 1 : dt / (on ? 550 : 380);    // capped, so a slow first frame doesn't skip it
     X.amt = goal > X.amt ? Math.min(goal, X.amt + step) : Math.max(goal, X.amt - step);
-    const ease = 1 - Math.pow(1 - X.amt, 3);
-    const k = reduceMotion ? 1 : 1 - Math.pow(0.0001, dt / 1000);   // ~quick trail
-    if (!X.r) { X.x = target.x; X.y = target.y; }
-    X.x += (target.x - X.x) * k; X.y += (target.y - X.y) * k;
-    X.r = Math.min(RADIUS, Math.min(W, H) * 0.3) * (0.35 + 0.65 * ease);
+    if (hairs) hairs.style.opacity = String(1 - Math.min(1, X.amt * 3));   // loose hairs don't show on film
+    cv.style.display = nogl() && X.amt > 0 ? '' : 'none';
     draw();
     X.redraw && X.redraw();
-    // while it's open, keep drawing: the cloth sways and the bones ride on it
+    // while it's on, keep drawing: the cloth sways, the bones ride on it, the tube flickers
     if (on || X.amt > 0) raf = requestAnimationFrame(tick);
-    else { X.r = 0; last = 0; }
+    else last = 0;
   }
   function toggle(v) {
     on = v;
@@ -1821,7 +1929,6 @@
     kick();
   }
 
-  if (!canHover) return;      // touch-only: no x-ray
   addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || e.isComposing) return;
     const t = e.target;
@@ -1829,13 +1936,9 @@
     if (e.key === 'x' || e.key === 'X') toggle(!on);
     else if (e.key === 'Escape' && on) toggle(false);
   });
-  addEventListener('pointermove', e => {
-    if (e.pointerType === 'touch') return;
-    target.x = e.clientX; target.y = e.clientY; target.moved = true;
-    if (on) kick();
-  }, { passive: true });
   addEventListener('resize', resize);
   document.fonts?.load(FONT).then(() => { wall = null; if (on) kick(); }).catch(() => {});
+  cv.style.display = 'none';
   resize();
 })();
 </script>
