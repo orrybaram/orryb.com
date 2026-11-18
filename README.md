@@ -6,11 +6,9 @@ Static site hosted on Netlify. Everything under `public/` is deployed as-is (see
 public/            served files
   index.html       homepage: the "Hello my name is" sticker on a sweatshirt (one self-contained file)
   resume/          /resume
-  assets/          css, js, fonts, img for the 2012 homepage
-  2012/            previous homepage (2012, live code editor)
+  2012/            previous homepage (2012, live code editor), with its own css/js/img/fonts
   2011/            old 2011 site
   projects/        old side projects, served at /projects/<name>
-src/less/          LESS sources for public/assets/css
 ```
 
 ## Homepage
@@ -22,14 +20,11 @@ the stitched ghost and icons, and the sticker. The sticker and the links are rea
 otherwise the same layout is drawn with Canvas 2D. The handwriting and the ghost are embedded
 as data URIs. To see which path is running, remove `hidden` from `#badge`.
 
-## Editing styles (2012 homepage)
+## 2012 homepage
 
-The compiled CSS is committed. After editing LESS, recompile:
-
-```sh
-npx lessc src/less/style.less     public/assets/css/main.css
-npx lessc src/less/bootstrap.less public/assets/css/bootstrap.css
-```
+Plain files, no build step. `css/editor.css` styles the editor page (the slice of Bootstrap 2 it
+used, the Monokai CodeMirror theme, and the page styles); `css/preview.css` is loaded into the
+preview iframe for the sticker markup and its Font Awesome icons.
 
 ## Local preview
 
