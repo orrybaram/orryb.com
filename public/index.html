@@ -34,9 +34,10 @@
     padding-right: max(16px, env(safe-area-inset-right, 0px));
     font-family: var(--font-util);
   }
+  /* sized in JS to innerWidth x innerHeight: the shader lays out in those px, and on phones
+     100vh is taller than innerHeight, which would stretch the drawing off the text layer */
   #stage {
-    position: fixed; inset: 0;
-    width: 100vw; height: 100vh;
+    position: fixed; left: 0; top: 0;
     display: block;
     touch-action: none;
   }
@@ -109,8 +110,7 @@
 
   /* No-WebGL fallback: show the plain HTML sticker */
   #hairs {
-    position: fixed; inset: 0;
-    width: 100vw; height: 100vh;
+    position: fixed; left: 0; top: 0;
     pointer-events: none;      /* the sticker underneath still gets its drags */
   }
   #plain { display: none; }
@@ -894,11 +894,94 @@
 
   // Put the text layer's copies exactly where the shader draws the sticker and links, so
   // selection, find-in-page highlights, clicks and focus land on what you see.
+  //
+  // The shader doesn't draw them where the plain layout says: it samples the sticker at
+  // p + foldGradient * uScale * 2.5 (the links at * 1.2), so the cloth's folds push the drawing
+  // around by up to ~10px, and the cursor's pull moves it again. So we run the same fold maths
+  // here, see which point of each element is drawn at a grid of screen points, and place the
+  // copy with the affine matrix that best fits those pairs.
+  const fract = x => x - Math.floor(x);
+  const mod289 = x => x - Math.floor(x * (1 / 289)) * 289;
+  const permute = x => mod289(((x * 34) + 1) * x);
+  function snoise(vx, vy) {                       // the shader's snoise, line for line
+    const C0 = 0.211324865405187, C1 = 0.366025403784439, C2 = -0.577350269189626, C3 = 0.024390243902439;
+    let ix = Math.floor(vx + (vx + vy) * C1), iy = Math.floor(vy + (vx + vy) * C1);
+    const x0x = vx - ix + (ix + iy) * C0, x0y = vy - iy + (ix + iy) * C0;
+    const i1x = x0x > x0y ? 1 : 0, i1y = 1 - i1x;
+    const x1x = x0x + C0 - i1x, x1y = x0y + C0 - i1y;
+    const x2x = x0x + C2, x2y = x0y + C2;
+    ix = mod289(ix); iy = mod289(iy);
+    const p = [permute(permute(iy) + ix), permute(permute(iy + i1y) + ix + i1x), permute(permute(iy + 1) + ix + 1)];
+    const px = [x0x, x1x, x2x], py = [x0y, x1y, x2y];
+    let n = 0;
+    for (let i = 0; i < 3; i++) {
+      let m = Math.max(0.5 - (px[i] * px[i] + py[i] * py[i]), 0);
+      m *= m; m *= m;
+      const x = 2 * fract(p[i] * C3) - 1, h = Math.abs(x) - 0.5, a0 = x - Math.floor(x + 0.5);
+      m *= 1.79284291400159 - 0.85373472095314 * (a0 * a0 + h * h);
+      n += m * (a0 * px[i] + h * py[i]);
+    }
+    return 130 * n;
+  }
+  function foldH(x, y) {                          // the shader's foldH (no pucker: it's always 0)
+    const S = FOLD_SCALE;
+    let qx = (x - layout.cx) / S + 0.61, qy = (y - layout.cy) / S + 0.37;
+    const dx = (x - poke.x) / S, dy = (y - poke.y) / S;
+    const reach = Math.exp(-(dx * dx + dy * dy) / 0.045) * (0.75 + 0.25 * snoise(qx * 2.5 + 31, qy * 2.5 + 31));
+    qx -= poke.dx * reach * 0.035; qy -= poke.dy * reach * 0.035;
+    const w = snoise(qx * 0.9 + 3.1, qy * 0.9 + 3.1);
+    let h = 0.60 * Math.sin(qx * 4 + qy * 1.4 + 1.8 * w);
+    h += 0.30 * Math.sin(qx * 7.5 - qy * 3 + 2.2 * snoise(qx * 1.4 + 9, qy * 1.4 + 9));
+    h += 0.22 * snoise(qx * 2.2 + 1.7, qy * 2.2 + 1.7);
+    h += 0.08 * snoise(qx * 5, qy * 5);
+    h += Math.hypot(poke.dx, poke.dy) * reach * 0.04;
+    return h;
+  }
+  function foldShift(x, y, k) {                   // g * uScale * k, as the shader works it out
+    const e = 1.5, f = FOLD_SCALE * k / (2 * e);
+    return [(foldH(x + e, y) - foldH(x - e, y)) * f, (foldH(x, y + e) - foldH(x, y - e)) * f];
+  }
+  // screen px -> the element px the shader draws there
+  function stickerPointAt(x, y) {
+    const [sx, sy] = foldShift(x, y, 2.5);
+    const L = toLocal(x + sx, y + sy), k = STICKER_W / layout.w;
+    return [L.x * k, L.y * k];
+  }
+  function linksPointAt(x, y) {
+    const [sx, sy] = foldShift(x, y, 1.2), L = layout.link;
+    return [((x + sx - L.cx) / L.w + 0.5) * LINKS_W, ((y + sy - L.cy) / L.h + 0.5) * LINKS_H];
+  }
+  // Least-squares affine element px -> screen px from a grid over the element. The folds are
+  // broad (hundreds of px), so across one element the bend is very nearly affine.
+  function fitAffine(rigid, W, H, pointAt) {
+    const A = [0, 0, 0, 0, 0, 0, 0, 0, 0], bx = [0, 0, 0], by = [0, 0, 0];
+    for (let i = 0; i <= 6; i++) for (let j = 0; j <= 4; j++) {
+      const s = rigid.transformPoint(new DOMPoint(W * i / 6, H * j / 4));
+      const [ex, ey] = pointAt(s.x, s.y);
+      const v = [ex, ey, 1];
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) A[r * 3 + c] += v[r] * v[c];
+        bx[r] += v[r] * s.x; by[r] += v[r] * s.y;
+      }
+    }
+    const solve = b => {                          // 3x3 by Cramer's rule
+      const d = m => m[0] * (m[4] * m[8] - m[5] * m[7]) - m[1] * (m[3] * m[8] - m[5] * m[6]) + m[2] * (m[3] * m[7] - m[4] * m[6]);
+      const D = d(A);
+      return [0, 1, 2].map(c => d(A.map((v, i) => (i % 3 === c ? b[(i / 3) | 0] : v))) / D);
+    };
+    const [a, c, e] = solve(bx), [b, d, f] = solve(by);
+    return new DOMMatrix([a, b, c, d, e, f]);
+  }
   const elementM = { sticker: null, links: null };
+  const placed = { sticker: '', links: '' };
   function placeElements() {
     if (!elementM.sticker) return;
-    stickerText.style.transform = elementM.sticker.toString();
-    linksText.style.transform = elementM.links.toString();
+    const set = (key, el, m) => {
+      const css = m.toString();
+      if (css !== placed[key]) { placed[key] = css; el.style.transform = css; }
+    };
+    set('sticker', stickerText, fitAffine(elementM.sticker, STICKER_W, STICKER_H, stickerPointAt));
+    set('links', linksText, fitAffine(elementM.links, LINKS_W, LINKS_H, linksPointAt));
   }
 
   // ---- Links texture (unit 3): the live <nav> via HTML-in-Canvas, else the same layout in 2D
@@ -944,6 +1027,7 @@
   // ---- Layout + render ----
   const ANGLE = -0.06;
   const ZOOM = 1.6;            // close-up on the shirt: everything about the cloth is drawn 1.6x bigger
+  const FOLD_SCALE = 1400 * ZOOM;   // fixed, so folds keep their size and place
   const GHOST_FILL = 0.85;     // ghost height as a fraction of the sticker's
   let dpr = 1, layout = {};
   const light = { x: -0.45, y: -0.6 };
@@ -986,6 +1070,8 @@
     dpr = Math.min(devicePixelRatio || 1, 1.75);
     canvas.width = Math.round(innerWidth * dpr);
     canvas.height = Math.round(innerHeight * dpr);
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
     gl.viewport(0, 0, canvas.width, canvas.height);
     const w = Math.min(STICKER_W, innerWidth - 48);
     const h = w * STICKER_H / STICKER_W;
@@ -1010,7 +1096,7 @@
     gl.uniform2f(U.uCenter, layout.cx, layout.cy);
     gl.uniform2f(U.uSize, layout.w, layout.h);
     gl.uniform1f(U.uAngle, ANGLE);
-    gl.uniform1f(U.uScale, 1400 * ZOOM);              // fixed, so folds keep their size and place
+    gl.uniform1f(U.uScale, FOLD_SCALE);
     gl.uniform1f(U.uZoom, ZOOM);
     gl.uniform2f(U.uAnchor, layout.cx, layout.cy);
     gl.uniform2f(U.uCorner, peel.corner.x, peel.corner.y);
@@ -1132,6 +1218,7 @@
       }
       if (peel.goal) schedule();
     }
+    placeElements();            // the cursor's pull moves the folds, and the drawing with them
     draw();
   }
 
@@ -1244,6 +1331,12 @@
 
   resize();
   fontsReady.then(() => {
+    // stretch the invisible name across the handwriting, so selecting it highlights all of it
+    const nameText = stickerText.querySelector('.name-text');
+    const m = document.createElement('canvas').getContext('2d');
+    m.font = getComputedStyle(nameText).font;
+    const tw = m.measureText(nameText.textContent).width;
+    if (tw > 0) nameText.style.transform = `scaleX(${(330 / tw).toFixed(3)})`;
     uploadSticker();
     if (htmlInCanvas && canvas.requestPaint) canvas.requestPaint();
     schedule();
@@ -1352,6 +1445,7 @@
     dpr = Math.min(devicePixelRatio || 1, 2);
     W = innerWidth; H = innerHeight;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
     draw();
   }
 
