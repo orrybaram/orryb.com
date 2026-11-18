@@ -88,12 +88,24 @@
     transform: rotate(-1.5deg);
   }
 
-  /* Inside the canvas, each element's CSS transform is set (in JS) to where the shader draws it,
-     so selection, find-in-page, hit-testing and focus rings line up with what you see. */
-  #stage > #sticker, #stage > #links {
+  /* The text layer: an invisible copy of the sticker and links, laid over the canvas exactly where
+     the shader draws them (transform set in JS). It's ordinary DOM, so text selection,
+     find-in-page, clicks and keyboard focus work in every browser, not only ones with HTML-in-Canvas. */
+  #textlayer {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  #textlayer > * {
     position: absolute; left: 0; top: 0;
     transform-origin: 0 0;
+    pointer-events: auto;
   }
+  #textlayer .sticker, #textlayer .write { background: transparent; }
+  #textlayer * { color: transparent !important; }
+  #textlayer img { visibility: hidden; }
+  #textlayer ::selection { color: transparent; background: rgba(60, 120, 230, .35); }
+  #textlayer a:focus { outline: none; }          /* focus shows as coloured thread in the stitching */
 
   /* No-WebGL fallback: show the plain HTML sticker */
   #hairs {
@@ -110,20 +122,19 @@
 
   /* The links live inside the canvas too. Laid out at a fixed size; the shader stitches
      them into the shirt from this element's rendering (white text = where the thread goes). */
-  #links {
+  .links {
     width: 132px; height: 52px;
     display: flex;
   }
-  #links a {
+  .links a {
     flex: 1;
     display: flex; align-items: center; justify-content: center;
     color: #fff; text-decoration: none;
   }
-  #links svg { width: 37px; height: 37px; fill: currentColor; display: block; }
-  #links a:focus { outline: none; }               /* focus shows as red thread in the stitching */
+  .links svg { width: 37px; height: 37px; fill: currentColor; display: block; }
   .nogl #plain { flex-direction: column; gap: 28px; display: flex; align-items: center; justify-content: center; }
-  .nogl #links a { color: var(--thread); }
-  .nogl #links a:focus-visible { outline: 2px solid var(--thread); outline-offset: 2px; }
+  .nogl .links a { color: var(--thread); }
+  .nogl .links a:focus-visible { outline: 2px solid var(--thread); outline-offset: 2px; }
 
   #badge {
     position: fixed; z-index: 2;
@@ -149,13 +160,14 @@
       <p class="sub">here for the pizza · Philadelphia, PA</p>
     </div>
   </div>
-  <nav id="links" aria-label="Elsewhere">
+  <nav id="links" class="links" aria-label="Elsewhere">
     <a href="https://github.com/orrybaram" target="_blank" rel="noopener" aria-label="GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></a>
     <a href="https://www.linkedin.com/pub/orry-baram/32/756/631" target="_blank" rel="noopener" aria-label="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 4.892v4.249zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
   </nav>
 </canvas>
 <div id="plain"></div>
 <canvas id="hairs" aria-hidden="true"></canvas>
+<div id="textlayer"></div>
 
 
 <div id="badge" hidden>Renderer: <b id="mode">starting…</b></div>
@@ -737,6 +749,22 @@
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { plainFallback('shader failed to link'); return; }
   gl.useProgram(prog);
 
+  // The copies inside the canvas are only textures now: inert, so find-in-page and Tab don't
+  // see them twice. The text layer's copies are the ones people select, find, click and focus.
+  const textLayer = document.getElementById('textlayer');
+  const textCopy = el => {
+    const c = el.cloneNode(true);
+    c.removeAttribute('id');
+    c.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+    textLayer.appendChild(c);
+    el.inert = true;
+    return c;
+  };
+  const stickerText = textCopy(stickerEl);
+  const linksText = textCopy(linksEl);
+  const linkTargets = [...linksText.querySelectorAll('a')];
+  const setCursor = c => { canvas.style.cursor = c; textLayer.style.cursor = c; };
+
   const buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
@@ -864,18 +892,13 @@
     placeElements();
   }
 
-  // Tell the browser where the real DOM is drawn, so selection, find-in-page, hit-testing and
-  // focus rings land on what you see: the element's CSS transform is set to its on-screen draw
-  // transform, and (in current Chrome) updateElementGeometry commits it after each upload.
+  // Put the text layer's copies exactly where the shader draws the sticker and links, so
+  // selection, find-in-page highlights, clicks and focus land on what you see.
   const elementM = { sticker: null, links: null };
   function placeElements() {
     if (!elementM.sticker) return;
-    stickerEl.style.transform = elementM.sticker.toString();
-    linksEl.style.transform = elementM.links.toString();
-    if (usingHTML && canvas.updateElementGeometry) {
-      canvas.updateElementGeometry(stickerEl);
-      canvas.updateElementGeometry(linksEl);
-    }
+    stickerText.style.transform = elementM.sticker.toString();
+    linksText.style.transform = elementM.links.toString();
   }
 
   // ---- Links texture (unit 3): the live <nav> via HTML-in-Canvas, else the same layout in 2D
@@ -1047,7 +1070,7 @@
     return Math.hypot(x - p[6], y - p[7]) < R || Math.hypot(x - mid[0], y - mid[1]) < R;
   }
   let hairLast = null;
-  canvas.addEventListener('pointermove', e => {
+  addEventListener('pointermove', e => {
     if (peel.active) { hairLast = null; return; }
     const p = { x: e.clientX, y: e.clientY };
     if (hairLast && nearHair(p.x, p.y, 22)) {      // brushing past knocks it the way you moved
@@ -1058,8 +1081,8 @@
     }
     hairLast = p;
   });
-  canvas.addEventListener('click', e => {
-    if (e.target.closest('a') || !nearHair(e.clientX, e.clientY, 18)) return;
+  addEventListener('click', e => {
+    if (e.target.closest?.('a') || !nearHair(e.clientX, e.clientY, 18)) return;
     hair.vx += (Math.random() - 0.5) * 3; hair.vy -= 2 + Math.random();     // a little flick
     schedule();
   });
@@ -1112,7 +1135,8 @@
     draw();
   }
 
-  canvas.addEventListener('pointerdown', e => {
+  addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
     const Lp = toLocal(e.clientX, e.clientY);
     const c = hitCorner(Lp);
     if (!c) return;
@@ -1121,12 +1145,12 @@
     peel.offset = { x: peel.drag.x - Lp.x, y: peel.drag.y - Lp.y };
     peel.downAt = { x: e.clientX, y: e.clientY }; peel.moved = 0;
     canvas.setPointerCapture(e.pointerId);
-    canvas.style.cursor = 'grabbing';
+    setCursor('grabbing');
     e.preventDefault();
   });
-  canvas.addEventListener('pointermove', e => {
+  addEventListener('pointermove', e => {
     const Lp = toLocal(e.clientX, e.clientY);
-    if (!peel.active) { canvas.style.cursor = hitCorner(Lp) ? 'grab' : ''; return; }
+    if (!peel.active) { if (e.buttons === 0) setCursor(hitCorner(Lp) ? 'grab' : ''); return; }
     peel.moved = Math.max(peel.moved, Math.hypot(e.clientX - peel.downAt.x, e.clientY - peel.downAt.y));
     const c = peel.corner, t = towardCentre(c);
     let dx = Lp.x + peel.offset.x - c.x, dy = Lp.y + peel.offset.y - c.y;
@@ -1153,16 +1177,16 @@
     // it stays where you leave it; a tap, or pushing it nearly flat, smooths it down
     const lift = Math.hypot(peel.drag.x - peel.corner.x, peel.drag.y - peel.corner.y);
     if (peel.moved < 4 || lift < 18) peel.goal = { ...peel.corner };
-    canvas.style.cursor = '';
+    setCursor('');
     schedule();
   };
-  // the sticker is real text now, so a corner drag must not also start a text selection
-  canvas.addEventListener('selectstart', e => { if (peel.active) e.preventDefault(); });
+  // the sticker is real text, so a corner drag must not also start a text selection
+  addEventListener('selectstart', e => { if (peel.active) e.preventDefault(); });
   canvas.addEventListener('pointerup', letGo);
   canvas.addEventListener('pointercancel', letGo);
 
-  // The stitched links: hover and focus turn the thread red. With HTML-in-Canvas the real <a>s
-  // sit over the stitching, so clicks and keyboard focus go to them directly.
+  // The stitched links: hover and focus colour the thread. The text layer's real <a>s sit over
+  // the stitching, so clicks and keyboard focus go to them directly.
   let linkHover = -1;
   function linkAt(x, y) {
     const L = layout.link;
@@ -1189,22 +1213,15 @@
     if (hover.p === 0 && !target) hover.idx = -1;
     return hover.p !== target;
   }
-  canvas.addEventListener('pointermove', e => {
+  addEventListener('pointermove', e => {
     if (peel.active) return;
     const i = linkAt(e.clientX, e.clientY);
-    if (i >= 0) canvas.style.cursor = 'pointer';
     hover.px = e.clientX; hover.py = e.clientY;
-    if (document.activeElement && linkAnchors.includes(document.activeElement)) return;
+    if (document.activeElement && linkTargets.includes(document.activeElement)) return;
     setHover(i);
   });
-  canvas.addEventListener('pointerleave', () => setHover(-1));
-  // Without HTML-in-Canvas the <a>s can't be hit, so a click on the stitching follows them
-  canvas.addEventListener('click', e => {
-    if (e.target !== canvas) return;               // the browser already handled a click on the <a> itself
-    const i = linkAt(e.clientX, e.clientY);
-    if (i >= 0) linkAnchors[i].click();
-  });
-  linkAnchors.forEach((a, i) => {
+  document.documentElement.addEventListener('pointerleave', () => setHover(-1));
+  linkTargets.forEach((a, i) => {
     a.addEventListener('focus', () => setHover(i));
     a.addEventListener('blur', () => setHover(-1));
   });
