@@ -133,6 +133,7 @@
   }
   .links svg { width: 37px; height: 37px; fill: currentColor; display: block; }
   .nogl #plain { flex-direction: column; gap: 28px; display: flex; align-items: center; justify-content: center; }
+  .nogl .links { position: relative; }   /* so the x-ray can measure the links inside it */
   .nogl .links a { color: var(--thread); }
   .nogl .links a:focus-visible { outline: 2px solid var(--thread); outline-offset: 2px; }
 
@@ -742,7 +743,7 @@
       // by the #xray canvas, cut to the same circle.
       if (uXray.w > 0.0) {
         float xd = length(p - uXray.xy) / max(uXray.z, 1.0);
-        float xm = uXray.w * smoothstep(1.0, 1.0 - 10.0 / max(uXray.z, 1.0), xd);
+        float xm = uXray.w * (1.0 - smoothstep(1.0 - 10.0 / max(uXray.z, 1.0), 1.0, xd));
         if (xm > 0.0) {
           float lum = dot(col, vec3(0.3, 0.59, 0.11));
           float gx = clamp((lum * 0.7 - 0.5) * 1.7 + 0.5, 0.0, 1.0);
