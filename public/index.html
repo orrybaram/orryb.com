@@ -133,6 +133,7 @@
   }
   .links svg { width: 37px; height: 37px; fill: currentColor; display: block; }
   .nogl #plain { flex-direction: column; gap: 28px; display: flex; align-items: center; justify-content: center; }
+  .nogl .links { position: relative; }   /* so the x-ray can measure the links inside it */
   .nogl .links a { color: var(--thread); }
   .nogl .links a:focus-visible { outline: 2px solid var(--thread); outline-offset: 2px; }
 
@@ -147,6 +148,13 @@
     padding: 6px 9px; border-radius: 3px;
   }
   #badge b { font-weight: 500; color: var(--thread); }
+
+  /* X-ray lens (press X): source code and the sticker's element boxes, drawn under the mouse.
+     It never takes the pointer, so peeling, links and text selection work through it. */
+  #xray {
+    position: fixed; left: 0; top: 0; z-index: 1;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
@@ -168,6 +176,7 @@
 <div id="plain"></div>
 <canvas id="hairs" aria-hidden="true"></canvas>
 <div id="textlayer"></div>
+<canvas id="xray" aria-hidden="true"></canvas>
 
 
 <div id="badge" hidden>Renderer: <b id="mode">starting…</b></div>
@@ -232,6 +241,7 @@
     uniform vec4 uHairA;     // ghost's hair: P0, P1 (css px)
     uniform vec4 uHairB;     // ...P2, P3
     uniform vec3 uSeam;     // side seam: x at y0, y0, curvature (css px)
+    uniform vec4 uXray;     // x-ray lens: centre (css px), radius, strength 0..1
 
     vec3 mod289(vec3 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
     vec2 mod289(vec2 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
@@ -727,6 +737,22 @@
 
       vec2 vq = (p * uDpr - uRes * 0.5) / uRes;
       col *= 1.0 - 0.22 * dot(vq, vq);
+
+      // ---- x-ray lens: inside it everything turns to blue-black radiograph film, lit a touch
+      // brighter in the middle like a lightbox. The code and the element boxes are drawn on top
+      // by the #xray canvas, cut to the same circle.
+      if (uXray.w > 0.0) {
+        float xd = length(p - uXray.xy) / max(uXray.z, 1.0);
+        float xm = uXray.w * (1.0 - smoothstep(1.0 - 10.0 / max(uXray.z, 1.0), 1.0, xd));
+        if (xm > 0.0) {
+          float lum = dot(col, vec3(0.3, 0.59, 0.11));
+          float gx = clamp((lum * 0.7 - 0.5) * 1.7 + 0.5, 0.0, 1.0);
+          vec3 film = gx * vec3(0.5, 0.68, 0.88) + vec3(0.015, 0.035, 0.07);
+          film += vec3(0.05, 0.09, 0.14) * (1.0 - xd);              // the lightbox glow
+          film *= 1.0 - 0.55 * xd * xd;                              // falling off toward the rim
+          col = mix(col, film, xm);
+        }
+      }
       gl_FragColor = vec4(col, 1.0);
     }`;
 
@@ -773,7 +799,7 @@
   gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
 
   const U = {};
-  ['uRes', 'uDpr', 'uLight', 'uTex', 'uCenter', 'uSize', 'uAngle', 'uScale', 'uZoom', 'uAnchor', 'uHairA', 'uHairB', 'uSeam', 'uCorner', 'uDrag', 'uPoke', 'uPokeV', 'uLinkTex', 'uLinkCenter', 'uLinkSize', 'uLinkHover', 'uSweep', 'uPucker', 'uEmb', 'uEmbDir', 'uEmbCenter', 'uEmbSize', 'uEmbAngle']
+  ['uRes', 'uDpr', 'uLight', 'uTex', 'uCenter', 'uSize', 'uAngle', 'uScale', 'uZoom', 'uAnchor', 'uHairA', 'uHairB', 'uSeam', 'uCorner', 'uDrag', 'uPoke', 'uPokeV', 'uLinkTex', 'uLinkCenter', 'uLinkSize', 'uLinkHover', 'uSweep', 'uPucker', 'uEmb', 'uEmbDir', 'uEmbCenter', 'uEmbSize', 'uEmbAngle', 'uXray']
     .forEach(n => U[n] = gl.getUniformLocation(prog, n));
 
   const tex = gl.createTexture();
@@ -1121,6 +1147,7 @@
     const seamX = Math.min(innerWidth - 28, layout.cx + layout.w / 2 + Math.max(110, innerWidth * 0.18));
     const seamY0 = innerHeight * 0.4;
     gl.uniform3f(U.uSeam, seamX, seamY0, 70 / (seamY0 * seamY0));
+    gl.uniform4f(U.uXray, xray.x || 0, xray.y || 0, xray.r || 0, xray.amt || 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
@@ -1175,6 +1202,9 @@
 
   let raf = 0;
   function schedule() { if (!raf) raf = requestAnimationFrame(frame); }
+  // the x-ray lens (its own script, below) sets xray.x/y/r/amt and asks for a redraw
+  const xray = window.orryXray = window.orryXray || {};
+  xray.redraw = schedule;
   // Cloth reacting to the cursor. The pointer's motion pulls on a damped spring (dx, dy);
   // the shader drags the folds near the cursor by that amount, so the fabric eases
   // along behind the pointer and settles back with a slight sway.
@@ -1523,6 +1553,289 @@
   addEventListener('resize', resize);
 
   makeHairs();
+  resize();
+})();
+</script>
+<script>
+// ---- X-ray (press X): a lens that follows the mouse and shows what the shirt is made of. The page's
+// own source glows through the fabric and the sticker's and links' HTML elements show as white
+// "bones". The shader does the film tint (uXray); this canvas draws the code and the boxes, cut to
+// the same circle. Mouse and keyboard only: on touch-only devices there is no x-ray.
+(() => {
+  const cv = document.getElementById('xray');
+  const ctx = cv.getContext('2d');
+  const X = window.orryXray = window.orryXray || {};
+  Object.assign(X, { x: 0, y: 0, r: 0, amt: 0 });
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canHover = matchMedia('(any-hover: hover)').matches;
+
+  const FONT = '400 10px "IBM Plex Mono", ui-monospace, Menlo, monospace';
+  const LABEL_FONT = '500 10.5px "IBM Plex Mono", ui-monospace, Menlo, monospace';
+  const LINE = 12.5, PAD = 14, GAP = 26, RADIUS = 165, FEATHER = 10;
+  // radiograph tones: mostly brightness, strings a faint warm film-amber
+  const C = { base: '#a9d6ff', tag: '#f2f9ff', attr: '#b7dcff', str: '#f1d7a6', com: '#56769a', num: '#d6ecff' };
+
+  console.log('%c psst. press X for an x-ray of this page ',
+    'font: 500 12px "IBM Plex Mono", monospace; color: #eaf6ff; background: #0b2340; padding: 4px 6px; border-radius: 3px; text-shadow: 0 0 6px #6fb8ff');
+
+  // ---- the source: the real file, with the embedded images cut down to one short line each
+  let lines = null;
+  function loadSource() {
+    if (lines) return;
+    lines = [];
+    const take = text => {
+      lines = text.replace(/data:([a-z/+.-]+);base64,[A-Za-z0-9+/=]{40,}/g, 'data:$1;base64,…').split('\n');
+      wall = null; X.trimmedLength = lines.join('\n').length;
+      kick();
+    };
+    fetch(location.href, { cache: 'force-cache' }).then(r => (r.ok ? r.text() : Promise.reject()))
+      .catch(() => '<!doctype html>\n' + document.documentElement.outerHTML)
+      .then(take);
+  }
+
+  // A small highlighter: each line becomes runs of [text, colour]. Block comments carry over lines;
+  // backtick strings don't (the shader lives in one, and it should read as code, not as a string).
+  function tokenize(src) {
+    const out = [];
+    let inBlock = false, inHtml = false;
+    const RE = /(\/\/.*$)|(\/\*)|(<!--)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(<\/?[A-Za-z][\w-]*)|([A-Za-z_:-][\w:-]*)(?==)|(\b\d+(?:\.\d+)?\b)/g;
+    for (const raw of src) {
+      const line = raw.length > 240 ? raw.slice(0, 239) + '…' : raw;
+      const runs = [];
+      let i = 0;
+      const push = (t, c) => { if (t) runs.push([t, c]); };
+      while (i < line.length) {
+        if (inBlock || inHtml) {
+          const end = line.indexOf(inBlock ? '*/' : '-->', i);
+          const stop = end < 0 ? line.length : end + (inBlock ? 2 : 3);
+          push(line.slice(i, stop), C.com);
+          if (end >= 0) inBlock = inHtml = false;
+          i = stop; continue;
+        }
+        RE.lastIndex = i;
+        const m = RE.exec(line);
+        if (!m) { push(line.slice(i), C.base); break; }
+        push(line.slice(i, m.index), C.base);
+        if (m[1]) push(m[1], C.com);
+        else if (m[2]) { inBlock = true; push('/*', C.com); }
+        else if (m[3]) { inHtml = true; push('<!--', C.com); }
+        else if (m[4]) push(m[4], C.str);
+        else if (m[5]) push(m[5], C.tag);
+        else if (m[6]) push(m[6], C.attr);
+        else push(m[7], C.num);
+        i = m.index + m[0].length;
+        if (inBlock || inHtml) continue;
+      }
+      out.push(runs);
+    }
+    return out;
+  }
+
+  // ---- the code wall: the file, wrapped into columns across the window. It drifts slowly upward
+  // while the lens is open, so the whole file (head, styles, shader, scripts) comes past in a few
+  // minutes. Only the rows under the lens are drawn each frame.
+  let W = 0, H = 0, dpr = 1, wall = null;
+  function buildWall() {
+    wall = { rows: [], cols: 1, colW: 0, rowsPerCol: 1, cw: 6 };
+    if (!lines || !lines.length) return;
+    ctx.font = FONT;
+    const cw = ctx.measureText('M').width || 6;
+    const cols = Math.max(1, Math.round((W - 2 * PAD) / 470));
+    const colW = (W - 2 * PAD - GAP * (cols - 1)) / cols;
+    const perRow = Math.max(10, Math.floor(colW / cw));
+    const rows = [];
+    for (const runs of tokenize(lines)) {
+      let row = [], x = 0;
+      for (let [t, c] of runs) {
+        while (t.length) {
+          const piece = t.slice(0, perRow - x);
+          row.push([piece, c, x]); x += piece.length; t = t.slice(piece.length);
+          if (x >= perRow && t.length) { rows.push(row); row = []; x = 0; }
+        }
+      }
+      rows.push(row);
+    }
+    wall = { rows, cols, colW, cw, rowsPerCol: Math.max(1, Math.ceil((H - 2 * PAD) / LINE)) };
+  }
+  const DRIFT = 3.2;                         // rows per second
+  let drift = 0;
+  function drawCode(x, y, r) {
+    const { rows, cols, colW, cw, rowsPerCol } = wall;
+    if (!rows.length) return;
+    const n = rows.length, base = Math.floor(drift), frac = drift - base;
+    ctx.font = FONT; ctx.textBaseline = 'top';
+    ctx.globalAlpha = 0.42;
+    ctx.shadowColor = 'rgba(120, 190, 255, .8)'; ctx.shadowBlur = 6;
+    for (let c = 0; c < cols; c++) {
+      const cx = PAD + c * (colW + GAP);
+      if (cx > x + r || cx + colW < x - r) continue;
+      const first = Math.max(0, Math.floor((y - r - PAD) / LINE + frac));
+      const last = Math.min(rowsPerCol, Math.ceil((y + r - PAD) / LINE + frac) + 1);
+      for (let i = first; i <= last; i++) {
+        const row = rows[(base + c * rowsPerCol + i) % n];
+        const ry = PAD + (i - frac) * LINE;
+        for (const [t, col, at] of row) { ctx.fillStyle = col; ctx.fillText(t, cx + at * cw, ry); }
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ---- the bones: every element's box, through the same bent transform the drawing uses
+  const BONES = [
+    ['.sticker', ['', '.hello', '.mni', '.write', '.name', '.sub']],
+    ['.links', ['', 'a', 'a svg']],
+  ];
+  // element px -> screen px. The bounding box of an affine-mapped box is centred on the image of
+  // the box's centre, so the centre of getBoundingClientRect plus the transform's linear part is enough.
+  function rootMatrix(el) {
+    const r = el.getBoundingClientRect(), t = getComputedStyle(el).transform;
+    const L = new DOMMatrix(t === 'none' ? undefined : t);
+    L.e = 0; L.f = 0;
+    return new DOMMatrix().translate(r.left + r.width / 2, r.top + r.height / 2)
+      .multiply(L).translate(-el.offsetWidth / 2, -el.offsetHeight / 2);
+  }
+  // an element's box within its root, with its own transform (the handwriting and the sub line are tilted)
+  function localBox(el, root) {
+    let w, h, x = 0, y = 0;
+    if (el instanceof SVGElement) {           // no offsetLeft: centred in its link
+      const pr = el.parentElement;
+      const cs = getComputedStyle(el);
+      w = parseFloat(cs.width) || 0; h = parseFloat(cs.height) || 0;
+      const p = localBox(pr, root);
+      return { m: p.m.translate((p.w - w) / 2, (p.h - h) / 2), w, h };
+    }
+    w = el.offsetWidth; h = el.offsetHeight;
+    for (let n = el; n && n !== root; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }
+    let m = new DOMMatrix().translate(x, y);
+    const t = el === root ? 'none' : getComputedStyle(el).transform;
+    if (t !== 'none') m = m.translate(w / 2, h / 2).multiply(new DOMMatrix(t)).translate(-w / 2, -h / 2);
+    return { m, w, h };
+  }
+  const label = el => el.tagName.toLowerCase() + (el.classList[0] ? '.' + el.classList[0] : '');
+  function bones() {
+    const out = [];
+    for (const [sel, kids] of BONES) {
+      const root = document.querySelector('#textlayer ' + sel) || document.querySelector('#plain ' + sel);
+      if (!root || !root.offsetWidth) continue;
+      const M = rootMatrix(root);
+      for (const k of kids) {
+        for (const el of (k ? root.querySelectorAll(k) : [root])) {
+          const b = localBox(el, root);
+          const svg = el instanceof SVGElement, link = el.tagName === 'A';
+          out.push({ m: M.multiply(b.m), w: b.w, h: b.h, text: svg ? '' : label(el), below: link });
+        }
+      }
+    }
+    return out;
+  }
+
+  // ---- drawing
+  function resize() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    wall = null;
+    if (!target.moved) { target.x = W / 2; target.y = H * 0.43; }
+    kick();
+  }
+  function draw() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    if (X.amt <= 0) return;
+    if (!wall) buildWall();
+    const { x, y, r } = X;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // everything here is cut to the lens by the feathered mask below (no clip(): with shadows it
+    // can drop the drawing in Chrome's accelerated canvas)
+    ctx.save();
+    if (document.documentElement.classList.contains('nogl')) {   // no shader tint: lay the film down here
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(10, 26, 48, .9)'); g.addColorStop(1, 'rgba(2, 8, 18, .96)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    }
+    drawCode(x, y, r);
+
+    // bones
+    ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(232, 246, 255, .92)';
+    ctx.shadowColor = 'rgba(140, 205, 255, .75)'; ctx.shadowBlur = 10;
+    ctx.font = LABEL_FONT; ctx.fillStyle = '#eaf6ff';
+    for (const b of bones()) {
+      ctx.save();
+      ctx.transform(b.m.a, b.m.b, b.m.c, b.m.d, b.m.e, b.m.f);
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(0, 0, b.w, b.h, 3) : ctx.rect(0, 0, b.w, b.h);
+      ctx.stroke();
+      if (b.text) {
+        ctx.shadowColor = 'rgba(111, 184, 255, .9)'; ctx.shadowBlur = 6;
+        ctx.textBaseline = b.below ? 'top' : 'bottom';
+        ctx.fillText(b.text, 3, b.below ? b.h + 4 : -3);
+        ctx.shadowColor = 'rgba(140, 205, 255, .75)'; ctx.shadowBlur = 10;
+      }
+      ctx.restore();
+    }
+    ctx.restore();
+
+    // a feathered edge, then a faint rim and glow round the lens
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-in';
+    const f = ctx.createRadialGradient(x, y, 0, x, y, r);
+    f.addColorStop(0, `rgba(0,0,0,${X.amt})`);
+    f.addColorStop(Math.max(0, 1 - FEATHER / r), `rgba(0,0,0,${X.amt})`);
+    f.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = f; ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+    ctx.save();
+    ctx.globalAlpha = X.amt;
+    ctx.strokeStyle = 'rgba(170, 215, 255, .35)'; ctx.lineWidth = 1;
+    ctx.shadowColor = 'rgba(80, 150, 230, .5)'; ctx.shadowBlur = 40;
+    ctx.beginPath(); ctx.arc(x, y, r - FEATHER / 2, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---- state: on/off eases the lens open and shut; the lens trails the mouse a little
+  let on = false, raf = 0, last = 0;
+  const target = { x: 0, y: 0, moved: false };
+  const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+  function tick(now) {
+    raf = 0;
+    const raw = now - (last || now), dt = Math.min(64, raw); last = now;
+    const goal = on ? 1 : 0;
+    if (!reduceMotion && X.amt > 0) drift += DRIFT * dt / 1000;
+    const step = reduceMotion ? 1 : raw / 300;          // opens in 300ms however slow the frames
+    X.amt = goal > X.amt ? Math.min(goal, X.amt + step) : Math.max(goal, X.amt - step);
+    const ease = 1 - Math.pow(1 - X.amt, 3);
+    const k = reduceMotion ? 1 : 1 - Math.pow(0.0001, dt / 1000);   // ~quick trail
+    if (!X.r) { X.x = target.x; X.y = target.y; }
+    X.x += (target.x - X.x) * k; X.y += (target.y - X.y) * k;
+    X.r = Math.min(RADIUS, Math.min(W, H) * 0.3) * (0.35 + 0.65 * ease);
+    draw();
+    X.redraw && X.redraw();
+    // while it's open, keep drawing: the cloth sways and the bones ride on it
+    if (on || X.amt > 0) raf = requestAnimationFrame(tick);
+    else { X.r = 0; last = 0; }
+  }
+  function toggle(v) {
+    on = v;
+    if (on) loadSource();
+    kick();
+  }
+
+  if (!canHover) return;      // touch-only: no x-ray
+  addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || e.isComposing) return;
+    const t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (e.key === 'x' || e.key === 'X') toggle(!on);
+    else if (e.key === 'Escape' && on) toggle(false);
+  });
+  addEventListener('pointermove', e => {
+    if (e.pointerType === 'touch') return;
+    target.x = e.clientX; target.y = e.clientY; target.moved = true;
+    if (on) kick();
+  }, { passive: true });
+  addEventListener('resize', resize);
+  document.fonts?.load(FONT).then(() => { wall = null; if (on) kick(); }).catch(() => {});
   resize();
 })();
 </script>

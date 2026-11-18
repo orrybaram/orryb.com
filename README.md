@@ -20,6 +20,10 @@ the stitched ghost and icons, and the sticker. The sticker and the links are rea
 otherwise the same layout is drawn with Canvas 2D. The handwriting and the ghost are embedded
 as data URIs. To see which path is running, remove `hidden` from `#badge`.
 
+Easter egg: press **X** (mouse and keyboard only) for an x-ray lens that follows the cursor and shows the
+page's own source and the sticker's and links' element boxes. The shader tints the film (`uXray`); the `#xray` canvas
+draws the code and boxes. The console hints at it.
+
 ## 2012 homepage
 
 Plain files, no build step. `css/editor.css` styles the editor page (the slice of Bootstrap 2 it
