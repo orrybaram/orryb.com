@@ -1,0 +1,23 @@
+[build]
+  publish = "public"
+
+# Old asset URLs, kept working for anything outside this repo that still links to them.
+[[redirects]]
+  from = "/css/*"
+  to = "/assets/css/:splat"
+  status = 301
+
+[[redirects]]
+  from = "/js/*"
+  to = "/assets/js/:splat"
+  status = 301
+
+[[redirects]]
+  from = "/img/*"
+  to = "/assets/img/:splat"
+  status = 301
+
+[[redirects]]
+  from = "/fonts/*"
+  to = "/assets/fonts/:splat"
+  status = 301
