@@ -73,11 +73,26 @@
     transform: rotate(-2deg);
   }
   .sticker .name img { display: block; width: 340px; height: auto; }
+  /* The handwriting is an image; this invisible text over it makes the name selectable and findable. */
+  .sticker .name-text {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font: 400 48px/1 var(--font-ink);
+    color: transparent;
+  }
+  .sticker .name-text::selection { color: transparent; background: rgba(60, 120, 230, .35); }
   .sticker .sub {
     position: absolute; left: 0; right: 0; bottom: 12px; margin: 0;
     font: 400 17px/1 var(--font-ink);
     color: #25252c;
     transform: rotate(-1.5deg);
+  }
+
+  /* Inside the canvas, each element's CSS transform is set (in JS) to where the shader draws it,
+     so selection, find-in-page, hit-testing and focus rings line up with what you see. */
+  #stage > #sticker, #stage > #links {
+    position: absolute; left: 0; top: 0;
+    transform-origin: 0 0;
   }
 
   /* No-WebGL fallback: show the plain HTML sticker */
@@ -130,7 +145,7 @@
     <div class="hello" aria-hidden="true">HELLO</div>
     <div class="mni" aria-hidden="true">my name is</div>
     <div class="write">
-      <h1 class="name"><img id="signature" alt="Orry Baram" width="340" height="72"></h1>
+      <h1 class="name"><img id="signature" alt="" width="340" height="72"><span class="name-text">Orry Baram</span></h1>
       <p class="sub">here for the pizza · Philadelphia, PA</p>
     </div>
   </div>
@@ -773,11 +788,17 @@
   // ---- Sticker texture: HTML-in-Canvas when available, else drawn with Canvas 2D ----
   const htmlInCanvas = typeof gl.texElementImage2D === 'function';
   let usingHTML = false;
+  // The API has changed shape between Chrome versions: current builds take
+  // (target, sizedInternalFormat, element); earlier ones took texImage2D-style arguments.
+  function texFromElement(el) {
+    try { gl.texElementImage2D(gl.TEXTURE_2D, gl.RGBA8 || 0x8058, el); }
+    catch (err) { gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el); }
+  }
 
   function uploadFromElement() {
     try {
       gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, stickerEl);
+      texFromElement(stickerEl);
       usingHTML = true;
       modeEl.textContent = 'HTML-in-Canvas (live DOM sticker → WebGL texture)';
       return true;
@@ -840,6 +861,21 @@
   function uploadSticker() {
     if (!(htmlInCanvas && uploadFromElement())) uploadFrom2D();
     uploadLinks();
+    placeElements();
+  }
+
+  // Tell the browser where the real DOM is drawn, so selection, find-in-page, hit-testing and
+  // focus rings land on what you see: the element's CSS transform is set to its on-screen draw
+  // transform, and (in current Chrome) updateElementGeometry commits it after each upload.
+  const elementM = { sticker: null, links: null };
+  function placeElements() {
+    if (!elementM.sticker) return;
+    stickerEl.style.transform = elementM.sticker.toString();
+    linksEl.style.transform = elementM.links.toString();
+    if (usingHTML && canvas.updateElementGeometry) {
+      canvas.updateElementGeometry(stickerEl);
+      canvas.updateElementGeometry(linksEl);
+    }
   }
 
   // ---- Links texture (unit 3): the live <nav> via HTML-in-Canvas, else the same layout in 2D
@@ -874,7 +910,7 @@
     gl.bindTexture(gl.TEXTURE_2D, linkTex);
     let ok = false;
     if (htmlInCanvas) {
-      try { gl.texElementImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, linksEl); ok = true; }
+      try { texFromElement(linksEl); ok = true; }
       catch (err) { console.warn('texElementImage2D failed for links, using Canvas 2D', err); }
     }
     if (!ok) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, drawLinksTo2D());
@@ -934,6 +970,13 @@
     resetPeel();
     const k = w / STICKER_W;
     layout.link = { cx: layout.cx, cy: Math.min(innerHeight - 26, layout.cy + h / 2 + 31 * k), w: LINKS_W * k, h: LINKS_H * k };   // same centre line as the ghost
+    // Where the shader draws each element, in CSS px (the same maths as toLocal, forwards)
+    elementM.sticker = new DOMMatrix()
+      .translate(layout.cx, layout.cy).rotate(ANGLE * 180 / Math.PI).scale(k)
+      .translate(-STICKER_W / 2, -STICKER_H / 2);
+    elementM.links = new DOMMatrix()
+      .translate(layout.link.cx, layout.link.cy).scale(k).translate(-LINKS_W / 2, -LINKS_H / 2);
+    placeElements();
     schedule();
   }
 
@@ -1016,7 +1059,7 @@
     hairLast = p;
   });
   canvas.addEventListener('click', e => {
-    if (e.target !== canvas || !nearHair(e.clientX, e.clientY, 18)) return;
+    if (e.target.closest('a') || !nearHair(e.clientX, e.clientY, 18)) return;
     hair.vx += (Math.random() - 0.5) * 3; hair.vy -= 2 + Math.random();     // a little flick
     schedule();
   });
@@ -1113,11 +1156,13 @@
     canvas.style.cursor = '';
     schedule();
   };
+  // the sticker is real text now, so a corner drag must not also start a text selection
+  canvas.addEventListener('selectstart', e => { if (peel.active) e.preventDefault(); });
   canvas.addEventListener('pointerup', letGo);
   canvas.addEventListener('pointercancel', letGo);
 
-  // The stitched links: hover and focus turn the thread red; a click on the stitching
-  // follows the real <a> inside the canvas (keyboard focus works on those directly).
+  // The stitched links: hover and focus turn the thread red. With HTML-in-Canvas the real <a>s
+  // sit over the stitching, so clicks and keyboard focus go to them directly.
   let linkHover = -1;
   function linkAt(x, y) {
     const L = layout.link;
@@ -1153,6 +1198,7 @@
     setHover(i);
   });
   canvas.addEventListener('pointerleave', () => setHover(-1));
+  // Without HTML-in-Canvas the <a>s can't be hit, so a click on the stitching follows them
   canvas.addEventListener('click', e => {
     if (e.target !== canvas) return;               // the browser already handled a click on the <a> itself
     const i = linkAt(e.clientX, e.clientY);
