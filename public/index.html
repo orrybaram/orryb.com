@@ -102,6 +102,9 @@
     transform-origin: 0 0;
     pointer-events: auto;
   }
+  /* it sits over the canvas, so touches on the sticker land here first: they're for peeling,
+     not for panning or zooming the page (which would cancel the drag part way through) */
+  #textlayer .sticker { touch-action: none; }
   #textlayer .sticker, #textlayer .write { background: transparent; }
   #textlayer * { color: transparent !important; }
   #textlayer img { visibility: hidden; }
@@ -500,6 +503,9 @@
       // ---- x-ray monitor (press X): the whole page turns into an old CRT showing a radiograph.
       // Switching on, the picture opens out from a bright line across the middle (and shuts back
       // down to it, then a dot); inside it the scene is drawn through a curved-glass warp.
+      // Only compiled into the x-ray program (XRAY defined): phone GPUs tend to run every branch,
+      // texture reads and all, so none of this may cost anything while the x-ray is off.
+#ifdef XRAY
       vec2 vpx = uRes / uDpr;                   // viewport, css px
       float crt = 0.0, crtGlow = 0.0;
       vec2 cuv = vec2(0.0);
@@ -518,6 +524,7 @@
           p = (cuv * 0.5 + 0.5) * vpx;
         }
       }
+#endif
 
       // fold normal
       float e = 1.5;
@@ -807,6 +814,7 @@
       vec2 vq = (p * uDpr - uRes * 0.5) / uRes;
       col *= 1.0 - 0.22 * dot(vq, vq);
 
+#ifdef XRAY
       if (crt > 0.0) {
         float t = uXray.y;
         vec2 uv = p / vpx;
@@ -845,6 +853,7 @@
       } else {
         col += crtGlow * vec3(0.75, 0.88, 1.0);      // the halo round the line as it powers on/off
       }
+#endif
       gl_FragColor = vec4(col, 1.0);
     }`;
 
@@ -859,13 +868,33 @@
     return sh;
   }
   const vs = compile(gl.VERTEX_SHADER, VERT);
-  const fs = compile(gl.FRAGMENT_SHADER, FRAG);
-  const prog = gl.createProgram();
-  if (!vs || !fs) { plainFallback('shader failed to compile'); return; }
-  gl.attachShader(prog, vs); gl.attachShader(prog, fs);
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { plainFallback('shader failed to link'); return; }
-  gl.useProgram(prog);
+  if (!vs) { plainFallback('shader failed to compile'); return; }
+  // Two programs from the one source: the everyday one, and the x-ray one (XRAY defined), which is
+  // only built the first time X is pressed and only used while the x-ray is showing.
+  const UNIFORMS = ['uRes', 'uDpr', 'uLight', 'uTex', 'uCenter', 'uSize', 'uAngle', 'uScale', 'uZoom', 'uAnchor', 'uHairA', 'uHairB', 'uSeam', 'uCorner', 'uDrag', 'uPoke', 'uPokeV', 'uLinkTex', 'uLinkCenter', 'uLinkSize', 'uLinkHover', 'uSweep', 'uPucker', 'uEmb', 'uEmbDir', 'uEmbCenter', 'uEmbSize', 'uEmbAngle', 'uXray', 'uXrayTex'];
+  const SAMPLERS = { uTex: 0, uEmb: 1, uEmbDir: 2, uLinkTex: 3, uXrayTex: 4 };
+  function link(defines) {
+    const fs = compile(gl.FRAGMENT_SHADER, defines + FRAG);
+    if (!fs) return null;
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs);
+    gl.bindAttribLocation(prog, 0, 'a');
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+    const U = {};
+    UNIFORMS.forEach(n => U[n] = gl.getUniformLocation(prog, n));
+    return { prog, U };
+  }
+  const base = link('');
+  if (!base) { plainFallback('shader failed to compile'); return; }
+  let xrayProg;                 // undefined: not built yet; null: failed to build
+  let U = base.U, current = base;
+  gl.useProgram(base.prog);
+  function useProgram(p) {
+    if (p === current) return;
+    gl.useProgram(p.prog);
+    current = p; U = p.U;
+  }
 
   // The copies inside the canvas are only textures now: inert, so find-in-page and Tab don't
   // see them twice. The text layer's copies are the ones people select, find, click and focus.
@@ -886,13 +915,10 @@
   const buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  const aLoc = gl.getAttribLocation(prog, 'a');
+  const aLoc = 0;               // bound to 0 in both programs
   gl.enableVertexAttribArray(aLoc);
   gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
 
-  const U = {};
-  ['uRes', 'uDpr', 'uLight', 'uTex', 'uCenter', 'uSize', 'uAngle', 'uScale', 'uZoom', 'uAnchor', 'uHairA', 'uHairB', 'uSeam', 'uCorner', 'uDrag', 'uPoke', 'uPokeV', 'uLinkTex', 'uLinkCenter', 'uLinkSize', 'uLinkHover', 'uSweep', 'uPucker', 'uEmb', 'uEmbDir', 'uEmbCenter', 'uEmbSize', 'uEmbAngle', 'uXray', 'uXrayTex']
-    .forEach(n => U[n] = gl.getUniformLocation(prog, n));
 
   const tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -1186,8 +1212,8 @@
     const c = Math.cos(ANGLE), s = Math.sin(ANGLE);
     return { x: c * x + s * y + layout.w / 2, y: -s * x + c * y + layout.h / 2 };
   }
-  function hitCorner(Lp) {
-    const R = 40;
+  // R: grab radius in css px; fingers get a bigger one than the mouse
+  function hitCorner(Lp, R = 40) {
     if (Math.hypot(Lp.x - peel.drag.x, Lp.y - peel.drag.y) < R) return peel.corner;   // the lifted flap's tip
     const lifted = Math.hypot(peel.drag.x - peel.corner.x, peel.drag.y - peel.corner.y) > 1;
     if (lifted) {   // one corner at a time: while it's up, only it can be grabbed
@@ -1196,13 +1222,26 @@
     return corners().find(c => Math.hypot(Lp.x - c.x, Lp.y - c.y) < R) || null;
   }
 
-  function resize() {
-    dpr = Math.min(devicePixelRatio || 1, 1.75);
+  // While a finger is peeling the sticker, draw at 1 device px per css px: phones have ~3x screens and
+  // the shader is heavy, so full resolution can't keep up with a drag. Motion hides the softness, and
+  // it snaps back to full sharpness as soon as the corner settles.
+  let lowRes = false;
+  function sizeCanvas() {
+    const full = Math.min(devicePixelRatio || 1, 1.75);
+    dpr = lowRes ? Math.min(full, 1) : full;
     canvas.width = Math.round(innerWidth * dpr);
     canvas.height = Math.round(innerHeight * dpr);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  function setLowRes(v) {
+    if (v === lowRes) return;
+    lowRes = v;
+    sizeCanvas();
+  }
+  function resize() {
+    sizeCanvas();
     canvas.style.width = innerWidth + 'px';
     canvas.style.height = innerHeight + 'px';
-    gl.viewport(0, 0, canvas.width, canvas.height);
     const w = Math.min(STICKER_W, innerWidth - 48);
     const h = w * STICKER_H / STICKER_W;
     layout = { cx: innerWidth / 2, cy: innerHeight * 0.43, w, h };
@@ -1220,6 +1259,15 @@
   }
 
   function draw() {
+    if (xray.amt > 0 && xrayProg === undefined) {
+      xrayProg = link('#define XRAY\n');
+      if (xrayProg) {           // samplers are set once per program
+        gl.useProgram(xrayProg.prog);
+        for (const n in SAMPLERS) gl.uniform1i(xrayProg.U[n], SAMPLERS[n]);
+        gl.useProgram(current.prog);
+      }
+    }
+    useProgram(xray.amt > 0 && xrayProg ? xrayProg : base);
     gl.uniform2f(U.uRes, canvas.width, canvas.height);
     gl.uniform1f(U.uDpr, dpr);
     gl.uniform2f(U.uLight, light.x, light.y);
@@ -1359,6 +1407,7 @@
       }
       if (peel.goal) schedule();
     }
+    if (lowRes && !peel.active && !peel.goal) setLowRes(false);
     placeElements();            // the cursor's pull moves the folds, and the drawing with them
     draw();
   }
@@ -1366,12 +1415,13 @@
   addEventListener('pointerdown', e => {
     if (e.button !== 0) return;
     const Lp = toLocal(e.clientX, e.clientY);
-    const c = hitCorner(Lp);
+    const c = hitCorner(Lp, e.pointerType === 'mouse' ? 40 : 64);
     if (!c) return;
     if (c !== peel.corner) { peel.corner = c; peel.drag = { ...c }; }
     peel.active = true; peel.goal = null;
     peel.offset = { x: peel.drag.x - Lp.x, y: peel.drag.y - Lp.y };
     peel.downAt = { x: e.clientX, y: e.clientY }; peel.moved = 0;
+    if (e.pointerType !== 'mouse') setLowRes(true);
     canvas.setPointerCapture(e.pointerId);
     setCursor('grabbing');
     e.preventDefault();
@@ -1408,6 +1458,12 @@
     setCursor('');
     schedule();
   };
+  // Safari can still claim a touch on the corner for scrolling or a long-press selection; stopping
+  // the touch itself (pointer events keep coming) keeps the drag ours from the first touch
+  addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    if (e.touches.length === 1 && hitCorner(toLocal(t.clientX, t.clientY), 64)) e.preventDefault();
+  }, { passive: false });
   // the sticker is real text, so a corner drag must not also start a text selection
   addEventListener('selectstart', e => { if (peel.active) e.preventDefault(); });
   canvas.addEventListener('pointerup', letGo);
