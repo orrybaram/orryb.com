@@ -448,8 +448,8 @@
       d = min(d, sdSeg(kc, vec2(9.5, -11.0), vec2(14.0, -13.0)));
       d = min(d, sdSeg(kc, vec2(-9.5, 6.0), vec2(-14.0, 13.0)));
       d = min(d, sdSeg(kc, vec2(9.5, 6.0), vec2(14.0, 13.0)));
-      d = min(d, sdSeg(tf, vec2(-6.0, -6.0), vec2(6.0, 6.0)) - 0.5);     // a big X on it, pressed hard
-      d = min(d, sdSeg(tf, vec2(6.0, -6.5), vec2(-6.0, 5.5)) - 0.5);
+      d = min(d, sdSeg(kc, vec2(-4.0, -4.0), vec2(4.0, 4.0)) - 0.4);     // an X in the middle of it, pressed hard
+      d = min(d, sdSeg(kc, vec2(4.0, -4.0), vec2(-4.0, 4.0)) - 0.4);
       d = min(d, sdSeg(s, vec2(-10.0, 0.8), vec2(3.5, -0.4)));           // arrow
       d = min(d, sdSeg(s, vec2(-1.5, -4.5), vec2(3.5, -0.4)));
       d = min(d, sdSeg(s, vec2(-1.0, 4.0), vec2(3.5, -0.4)));
@@ -776,11 +776,13 @@
           {
             float kk = uSize.x / 420.0;
             vec2 bd = Lr - uSize + vec2(235.0, 20.0) * kk;
-            vec2 bs = vec2(-bd.x, bd.y) / kk / 0.62;
+            vec2 bs = vec2(-bd.x, bd.y) / kk / 0.7;
             if (dot(bs, bs) < 3600.0) {
-              float ink = penHint(bs) * (0.82 + 0.12 * snoise(bs * 0.25 + 9.0));
-              vec3 inkC = vec3(0.12, 0.33, 0.82) * (0.72 + 0.32 * max(dot(nF, L), 0.0));
-              flapC = mix(flapC, inkC, ink);
+              // no ink: only the dent a pen left pressing through from the front, a faint grey groove
+              // with a hairline of light along one wall, so it only shows when the light catches it
+              float dent = penHint(bs) * (0.75 + 0.25 * snoise(bs * 0.25 + 9.0));
+              float wall = max(penHint(bs + vec2(0.0, 1.3)) - dent, 0.0);
+              flapC = mix(flapC, flapC * vec3(0.76, 0.76, 0.775), dent * 0.8) + 0.055 * wall;
             }
           }
           float ch = catHairs(Lr);
@@ -1182,7 +1184,8 @@
 
   // ---- Layout + render ----
   const ANGLE = -0.06;
-  const ZOOM = 1.6;            // close-up on the shirt: everything about the cloth is drawn 1.6x bigger
+  const SCENE = 1.1;           // overall size of the scene: the sticker and the cloth scale together
+  const ZOOM = 1.6 * SCENE;    // close-up on the shirt: everything about the cloth is drawn this much bigger
   const FOLD_SCALE = 1400 * ZOOM;   // fixed, so folds keep their size and place
   const GHOST_FILL = 0.85;     // ghost height as a fraction of the sticker's
   let dpr = 1, layout = {};
@@ -1242,7 +1245,7 @@
     sizeCanvas();
     canvas.style.width = innerWidth + 'px';
     canvas.style.height = innerHeight + 'px';
-    const w = Math.min(STICKER_W, innerWidth - 48);
+    const w = Math.min(STICKER_W * SCENE, innerWidth - 48);
     const h = w * STICKER_H / STICKER_W;
     layout = { cx: innerWidth / 2, cy: innerHeight * 0.43, w, h };
     resetPeel();
